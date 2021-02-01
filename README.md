@@ -18,7 +18,7 @@ For the versions available, see the [tags on this repository](https://github.com
 
 * **[approxit](https://github.com/approxit)** - code
 * **[tehKaiN](https://github.com/tehKaiN)** - code
-* **Softiron** - graphics
+* **[Softiron](https://github.com/Softiron1)** - graphics
 * **[Luc3k](https://github.com/Luc3kLMC)** - sounds
 
 ### Authors of initial 2015 version
