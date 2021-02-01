@@ -51,12 +51,15 @@ void gsMapCreate() {
 
 	for (UBYTE i = 0; i < MAP_SIZE; ++i) {
 		for (UBYTE j = 0; j < MAP_SIZE; ++j) {
-			s_pMapBuffer->pTileData[i][j] = (i % 2) + ((j % 2) * 2);
+			if(i == 0 || j == 0 || i == MAP_SIZE-1 || j == MAP_SIZE-1) {
+				s_pMapBuffer->pTileData[i][j] = (i % 2) + ((j % 2) * 2);
+			}
 		}
 	}
+	s_pMapBuffer->pTileData[0][0] = 6;
 
 	tileBufferRedrawAll(s_pMapBuffer);
-	
+
 	viewLoad(s_pMapView);
 
 	systemUnuse();
@@ -86,7 +89,7 @@ void gsMapLoop() {
 	viewProcessManagers(s_pMapView);
 	copProcessBlocks();
 	debugColor(s_pMapVPort->pPalette[0]);
-	
+
 	vPortWaitForEnd(s_pMapVPort);
 }
 
@@ -100,6 +103,6 @@ void gsMapDestroy() {
 	bitmapDestroy(s_pTileSet);
 
 	systemUnuse();
-	
+
 	logBlockEnd("gsMapCreate()");
 }

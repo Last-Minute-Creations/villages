@@ -44,7 +44,7 @@ void genericDestroy() {
 	logBlockBegin("genericDestroy()");
 
 	systemUse();
-	
+
 	destroyGameStates();
 	keyDestroy();
 
