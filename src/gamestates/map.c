@@ -7,6 +7,7 @@
 #include <ace/managers/system.h>
 #include <ace/managers/log.h>
 #include <ace/managers/viewport/tilebuffer.h>
+#include <ace/managers/mouse.h>
 
 #include <ace/utils/bitmap.h>
 #include <ace/utils/palette.h>
@@ -14,6 +15,7 @@
 #include "game.h"
 #include "../debug.h"
 #include "../tileset.h"
+#include "../cursor.h"
 
 tView *s_pMapView = 0;
 tVPort *s_pMapVPort = 0;
@@ -48,18 +50,15 @@ void gsMapCreate() {
 	TAG_END);
 
 	paletteLoad("data/mirmirowo.plt", s_pMapVPort->pPalette, 1 << WINDOW_SCREEN_BPP);
+	copBlockDisableSprites(s_pMapView->pCopList, 0xFE);
+	
+	cursorCreate(s_pMapView, 0, "data/crosshair.bm", 0);
 
-	for (UBYTE i = 0; i < MAP_SIZE; ++i) {
-		for (UBYTE j = 0; j < MAP_SIZE; ++j) {
-			if(i == 0 || j == 0 || i == MAP_SIZE-1 || j == MAP_SIZE-1) {
-				s_pMapBuffer->pTileData[i][j] = (i % 2) + ((j % 2) * 2);
-			}
-		}
-	}
-	s_pMapBuffer->pTileData[0][0] = 6;
+	prepareMapData();
 
 	tileBufferRedrawAll(s_pMapBuffer);
 
+	systemSetDmaBit(DMAB_SPRITE, 1);
 	viewLoad(s_pMapView);
 
 	systemUnuse();
@@ -73,19 +72,14 @@ void gsMapLoop() {
 		return;
 	}
 
-	if (KEY_TAB) {
+	if (keyUse(KEY_TAB)) {
 		debugToggle();
 	}
 
-	UBYTE ubSpeed = keyCheck(KEY_LSHIFT) ? 2 : 1;
-
-	cameraMoveBy(
-		s_pMapBuffer->pCamera,
-		(keyCheck(KEY_RIGHT) - keyCheck(KEY_LEFT)) * ubSpeed,
-		(keyCheck(KEY_DOWN) - keyCheck(KEY_UP)) * ubSpeed
-	);
+	handleCameraScrolling();
 
 	debugColor(0x800);
+	cursorUpdate();
 	viewProcessManagers(s_pMapView);
 	copProcessBlocks();
 	debugColor(s_pMapVPort->pPalette[0]);
@@ -102,7 +96,70 @@ void gsMapDestroy() {
 
 	bitmapDestroy(s_pTileSet);
 
+	cursorDestroy();
+
 	systemUnuse();
 
 	logBlockEnd("gsMapCreate()");
+}
+
+void prepareMapData() {
+	for (UBYTE i = 0; i < MAP_SIZE; ++i) {
+		for (UBYTE j = 0; j < MAP_SIZE; ++j) {
+			s_pMapBuffer->pTileData[i][j] = (i % 2) + ((j % 2) * 2);
+		}
+	}
+
+	s_pMapBuffer->pTileData[3][1] = (15 * TILESET_ROTATION_COUNT) + 2;
+	s_pMapBuffer->pTileData[4][1] = (20 * TILESET_ROTATION_COUNT) + 1;
+	s_pMapBuffer->pTileData[5][1] = (15 * TILESET_ROTATION_COUNT) + 2;
+
+	s_pMapBuffer->pTileData[2][2] = (8 * TILESET_ROTATION_COUNT) + 0;
+	s_pMapBuffer->pTileData[3][2] = (3 * TILESET_ROTATION_COUNT) + 0;
+	s_pMapBuffer->pTileData[4][2] = (7 * TILESET_ROTATION_COUNT) + 2;
+	s_pMapBuffer->pTileData[5][2] = (3 * TILESET_ROTATION_COUNT) + 0;
+	s_pMapBuffer->pTileData[6][2] = (8 * TILESET_ROTATION_COUNT) + 1;
+
+	s_pMapBuffer->pTileData[1][3] = (15 * TILESET_ROTATION_COUNT) + 1;
+	s_pMapBuffer->pTileData[2][3] = (3 * TILESET_ROTATION_COUNT) + 0;
+	s_pMapBuffer->pTileData[3][3] = (3 * TILESET_ROTATION_COUNT) + 0;
+	s_pMapBuffer->pTileData[4][3] = (3 * TILESET_ROTATION_COUNT) + 1;
+	s_pMapBuffer->pTileData[5][3] = (3 * TILESET_ROTATION_COUNT) + 0;
+	s_pMapBuffer->pTileData[6][3] = (3 * TILESET_ROTATION_COUNT) + 1;
+	s_pMapBuffer->pTileData[7][3] = (15 * TILESET_ROTATION_COUNT) + 3;
+
+	s_pMapBuffer->pTileData[1][4] = (20 * TILESET_ROTATION_COUNT) + 0;
+	s_pMapBuffer->pTileData[2][4] = (11 * TILESET_ROTATION_COUNT) + 3;
+	s_pMapBuffer->pTileData[3][4] = (3 * TILESET_ROTATION_COUNT) + 0;
+	s_pMapBuffer->pTileData[4][4] = (7 * TILESET_ROTATION_COUNT) + 0;
+	s_pMapBuffer->pTileData[5][4] = (3 * TILESET_ROTATION_COUNT) + 0;
+	s_pMapBuffer->pTileData[6][4] = (10 * TILESET_ROTATION_COUNT) + 2;
+	s_pMapBuffer->pTileData[7][4] = (20 * TILESET_ROTATION_COUNT) + 0;
+
+	s_pMapBuffer->pTileData[2][5] = (20 * TILESET_ROTATION_COUNT) + 1;
+	s_pMapBuffer->pTileData[3][5] = (15 * TILESET_ROTATION_COUNT) + 0;
+	s_pMapBuffer->pTileData[4][5] = (20 * TILESET_ROTATION_COUNT) + 1;
+	s_pMapBuffer->pTileData[5][5] = (15 * TILESET_ROTATION_COUNT) + 0;
+	s_pMapBuffer->pTileData[6][5] = (20 * TILESET_ROTATION_COUNT) + 1;
+}
+
+void handleCameraScrolling() {
+	BYTE bCameraScrollHorizontal = keyCheck(KEY_RIGHT) - keyCheck(KEY_LEFT);
+	BYTE bCameraScrollVertical = keyCheck(KEY_DOWN) - keyCheck(KEY_UP);
+	UBYTE ubSpeed = keyCheck(KEY_LSHIFT) ? 2 : 1;
+
+	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
+	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
+
+	bCameraScrollHorizontal += WINDOW_SCREEN_WIDTH - MAP_MOUSE_SCROLL_MARGIN <= uwMouseX;
+	bCameraScrollHorizontal -= uwMouseX <= MAP_MOUSE_SCROLL_MARGIN;
+
+	bCameraScrollVertical += WINDOW_SCREEN_HEIGHT - MAP_MOUSE_SCROLL_MARGIN <= uwMouseY;
+	bCameraScrollVertical -= uwMouseY <= MAP_MOUSE_SCROLL_MARGIN;
+
+	cameraMoveBy(
+		s_pMapBuffer->pCamera,
+		CLAMP(bCameraScrollHorizontal, -1, 1) * ubSpeed,
+		CLAMP(bCameraScrollVertical, -1, 1) * ubSpeed
+	);
 }

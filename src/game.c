@@ -5,6 +5,7 @@
 #include <ace/managers/state.h>
 #include <ace/managers/key.h>
 #include <ace/managers/blit.h>
+#include <ace/managers/mouse.h>
 
 #include <ace/utils/extview.h>
 
@@ -26,6 +27,7 @@ void genericCreate() {
 	logBlockBegin("genericCreate()");
 
 	keyCreate();
+	mouseCreate(MOUSE_PORT_1);
 
 	createGameStates();
 	statePush(g_pGameStateManager, g_pGameStates[GAME_STATE_MAP]);
@@ -37,6 +39,7 @@ void genericCreate() {
 
 void genericProcess() {
 	keyProcess();
+	mouseProcess();
 	stateProcess(g_pGameStateManager);
 }
 
@@ -46,6 +49,7 @@ void genericDestroy() {
 	systemUse();
 
 	destroyGameStates();
+	mouseDestroy();
 	keyDestroy();
 
 	logBlockEnd("genericDestroy()");

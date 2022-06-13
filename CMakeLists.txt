@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.5)
+cmake_minimum_required(VERSION 2.8.12)
 project(villages LANGUAGES C)
 
 if(NOT AMIGA)
@@ -184,4 +184,12 @@ convertBitmaps(
 		${DATA_DIR}/mirmirowo_tileset.bm
 	MASKS
 		${DATA_DIR}/mirmirowo_tileset_mask.bm
+)
+
+convertBitmaps(
+	TARGET ${VILLAGES_EXECUTABLE} PALETTE ${RES_DIR}/crosshair.gpl
+	INTERLEAVED SOURCES
+		${RES_DIR}/crosshair.png
+	DESTINATIONS
+		${DATA_DIR}/crosshair.bm
 )
