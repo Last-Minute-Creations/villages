@@ -4,12 +4,12 @@
 /* Libs */
 #include <stdlib.h>
 
-#include "ACE:managers/rand.h"
-#include "ACE:managers/log.h"
-#include "ACE:managers/window.h"
-#include "ACE:managers/game.h"
-#include "ACE:managers/timer.h"
-#include "ACE:managers/blit.h"
+#include <ace/managers/rand.h>
+#include <ace/managers/log.h>
+#include <ace/managers/window.h>
+#include <ace/managers/game.h>
+#include <ace/managers/timer.h>
+#include <ace/managers/blit.h>
 
 #include "global.h"
 #include "gamestates/menu/menu.h"

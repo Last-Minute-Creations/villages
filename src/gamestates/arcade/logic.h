@@ -17,7 +17,7 @@
 #define LOGIC_TILE_DIRS 9
 
 typedef struct {
-	tCoord sTileCoord;
+	tUwCoordYX sTileCoord;
 	UBYTE ubLogicDataIdx;
 } tLogicListItem;
 

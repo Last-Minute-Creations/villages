@@ -6,19 +6,17 @@
 #include "config.h"
 #include "global.h"
 
-#include "ACE:managers/game.h"
-#include "ACE:managers/mouse.h"
-#include "ACE:managers/timer.h"
-#include "ACE:managers/log.h"
-#include "ACE:managers/memlog.h"
+#include <ace/managers/game.h>
+#include <ace/managers/mouse.h>
+#include <ace/managers/timer.h>
+#include <ace/managers/log.h>
 
-#include "ACE:managers/viewport/simplebuffer.h"
+#include <ace/managers/viewport/simplebuffer.h>
 
-#include "ACE:utils/extview.h"
-#include "ACE:utils/font.h"
-#include "ACE:utils/rect.h"
-#include "ACE:utils/bitmap.h"
-#include "ACE:utils/palette.h"
+#include <ace/utils/extview.h>
+#include <ace/utils/font.h>
+#include <ace/utils/bitmap.h>
+#include <ace/utils/palette.h>
 
 #include "gamestates/arcade/arcade.h"
 

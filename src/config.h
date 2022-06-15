@@ -4,18 +4,15 @@
 #include <clib/exec_protos.h> // Amiga typedefs
 
 /* Project Compilation flags */
-extern const UBYTE GAME_MEMLOG;
-extern const UBYTE GAME_DEBUG;
-
-extern const UWORD WINDOW_SCREEN_WIDTH;
-extern const UWORD WINDOW_SCREEN_HEIGHT;
-extern const UWORD WINDOW_SCREEN_BPP;
+#define GAME_MEMLOG 0
+#define GAME_DEBUG 0
+#define GAME_BPP 5
 
 // Kolory palety
-// Nie wyrzucaj tego póki nie wyra¿ê na to zgody
-// Czasem w kodzie lepiej napisaæ nazwê koloru ni¿ siê domyœlaæ, co konkretnego
-// rysuje dany kawa³ek kodu - zw³aszcza w tekstach i rectanglach
-// TODO: wywaliæ sta³e i wrzuciæ dla palety Selura
+// Nie wyrzucaj tego pï¿½ki nie wyraï¿½ï¿½ na to zgody
+// Czasem w kodzie lepiej napisaï¿½ nazwï¿½ koloru niï¿½ siï¿½ domyï¿½laï¿½, co konkretnego
+// rysuje dany kawaï¿½ek kodu - zwï¿½aszcza w tekstach i rectanglach
+// TODO: wywaliï¿½ staï¿½e i wrzuciï¿½ dla palety Selura
 
 #define COLOR_BLACK     0
 #define COLOR_NAVY      1

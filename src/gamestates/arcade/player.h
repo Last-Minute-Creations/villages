@@ -4,7 +4,7 @@
 #include "config.h"
 #include "global.h"
 
-#include "ACE:utils/memory.h"
+#include <ace/managers/memory.h>
 
 void playerListCreate(void);
 

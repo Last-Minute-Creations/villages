@@ -2,9 +2,8 @@
 #define GUARD_GAMESTATE_ARCADE_PAWN_H
 
 
-#include "ACE:utils/bitmap.h"
-#include "ACE:managers/blit.h"
-#include "ACE:managers/window.h"
+#include <ace/utils/bitmap.h>
+#include <ace/managers/blit.h>
 
 #include "config.h"
 #include "gamestates/arcade/arcade.h"

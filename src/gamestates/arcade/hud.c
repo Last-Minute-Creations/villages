@@ -5,16 +5,16 @@ static struct BitMap *g_pPawnsLarge;
 tHudManager g_sHudManager;
 
 /* Functions */
-void hudCreate(tExtView *pExtView) {
+void hudCreate(tView *pExtView) {
 	UBYTE i;
 
 	g_sHudManager.pExtView = pExtView;
-	g_sHudManager.pMainVPort = (tExtVPort*)pExtView->sView.ViewPort;
-	g_sHudManager.pHudVPort = (tExtVPort*)g_sHudManager.pMainVPort->sVPort.Next;
+	g_sHudManager.pMainVPort = (tVPort*)pExtView->sView.ViewPort;
+	g_sHudManager.pHudVPort = (tVPort*)g_sHudManager.pMainVPort->sVPort.Next;
 	g_sHudManager.ubExpanded = 0;
 	
 	g_pPawnsLarge = bitmapCreateFromFile("data/bitmaps/pawnsLarge.bm");
-	g_sHudManager.pRectBfr = rectCreateBfr(g_sHudManager.pHudVPort->sVPort.DWidth, 30, WINDOW_SCREEN_BPP);
+	g_sHudManager.pRectBfr = rectCreateBfr(g_sHudManager.pHudVPort->sVPort.DWidth, 30, GAME_BPP);
 	
 	g_sHudManager.pPlayerCache = allocFastFirst(sizeof(tHudPlayerCache) * g_sGameConfig.ubPlayerCount);
 	for (i = 0; i != g_sGameConfig.ubPlayerCount; ++i) {
@@ -22,7 +22,7 @@ void hudCreate(tExtView *pExtView) {
 	}
 	
 	hudRedrawAll();
-	// TODO: zast¹piæ kodem mened¿era skrolingu
+	// TODO: zastï¿½piï¿½ kodem menedï¿½era skrolingu
 	g_sHudManager.pHudVPort->sVPort.RasInfo->RyOffset = 32 * g_pCurrPlayer->ubIdx;
 	MakeVPort(&g_sHudManager.pExtView->sView, &g_sHudManager.pHudVPort->sVPort);
 	WaitTOF();
@@ -54,7 +54,7 @@ void hudRedrawPlayer(tPlayer *pPlayer) {
 	ubPlayerOffs = pPlayer->ubIdx * 32;
 	
 	if (!g_sHudManager.pPlayerCache[pPlayer->ubIdx].ubBgDrawn) {
-		// czyszczenie t³a
+		// czyszczenie tï¿½a
 		rectFill(
 			g_sHudManager.pRectBfr, pHudBitMap,
 			0, ubPlayerOffs,
@@ -75,7 +75,7 @@ void hudRedrawPlayer(tPlayer *pPlayer) {
 	}
 	
 	if (g_sHudManager.pPlayerCache[pPlayer->ubIdx].wPrevScore != pPlayer->uwScore) {
-		// odrysowanie t³a score'a
+		// odrysowanie tï¿½a score'a
 		if (!ubBgFresh) {
 			rectFill(
 				g_sHudManager.pRectBfr, pHudBitMap,
@@ -89,7 +89,7 @@ void hudRedrawPlayer(tPlayer *pPlayer) {
 		g_sHudManager.pPlayerCache[pPlayer->ubIdx].wPrevScore = pPlayer->uwScore;
 	}
 	
-	// odrysowanie t³a licznika pionów
+	// odrysowanie tï¿½a licznika pionï¿½w
 	if (g_sHudManager.pPlayerCache[pPlayer->ubIdx].ubPrevPawns != pPlayer->ubPawnsLeft) {
 		if (!ubBgFresh) {
 			rectFill(
@@ -98,7 +98,7 @@ void hudRedrawPlayer(tPlayer *pPlayer) {
 				125, 15, g_pPlayerColors[pPlayer->ubIdx][1]
 			);
 		}
-		// odrysowanie licznika pionów
+		// odrysowanie licznika pionï¿½w
 		sprintf(szBfr, "Goblins: %hhu", pPlayer->ubPawnsLeft);
 		fontDrawStr(pHudBitMap, g_pFont, 165, ubPlayerOffs + 7, szBfr, COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW);
 		g_sHudManager.pPlayerCache[pPlayer->ubIdx].ubPrevPawns = pPlayer->ubPawnsLeft;
@@ -160,7 +160,7 @@ void hudAnimate(UBYTE ubStart, UBYTE ubStop) {
 		ubStepValue = ( ( ( (g_sGameConfig.ubPlayerCount - 1) << 5 ) * stepRatios[i] ) >> 8);
 		g_sHudManager.pMainVPort->sVPort.DHeight = 223 - ubStepValue;
 		g_sHudManager.pHudVPort->sVPort.DyOffset = g_sHudManager.pMainVPort->sVPort.DHeight+2;
-		g_sHudManager.pHudVPort->sVPort.DHeight = WINDOW_SCREEN_HEIGHT - g_sHudManager.pHudVPort->sVPort.DyOffset;
+		g_sHudManager.pHudVPort->sVPort.DHeight = SCREEN_PAL_HEIGHT - g_sHudManager.pHudVPort->sVPort.DyOffset;
 		if(ubStepValue < g_pCurrPlayer->ubIdx << 5) {
 			g_sHudManager.pHudVPort->sVPort.RasInfo->RyOffset = (g_pCurrPlayer->ubIdx << 5) - ubStepValue;
 		}
@@ -169,7 +169,7 @@ void hudAnimate(UBYTE ubStart, UBYTE ubStop) {
 		}
 		MakeVPort(&g_sHudManager.pExtView->sView, &g_sHudManager.pMainVPort->sVPort);
 		MakeVPort(&g_sHudManager.pExtView->sView, &g_sHudManager.pHudVPort->sVPort);
-		extViewProcessManagers(g_sHudManager.pExtView); // wywo³anie scrollBufferProcess
+		extViewProcessManagers(g_sHudManager.pExtView); // wywoï¿½anie scrollBufferProcess
 	}
 }
 
@@ -199,7 +199,7 @@ void hudSummary(void) {
 	// numery graczy i score'y do sortowania
 	pPlayerScores = allocFastFirst(g_sGameConfig.ubPlayerCount * sizeof(UWORD));
 	pPlayerNumbers = allocFastFirst(g_sGameConfig.ubPlayerCount);
-	// wype³nij
+	// wypeï¿½nij
 	pTmpCurr = g_sGameConfig.pPlayerFirst;
 	for (ubPlayer = 0; ubPlayer != g_sGameConfig.ubPlayerCount; ++ubPlayer) {
 		pPlayerScores[ubPlayer] = pTmpCurr->uwScore;
@@ -213,7 +213,7 @@ void hudSummary(void) {
 		for (ubPlayer = g_sGameConfig.ubPlayerCount; --ubPlayer;) {
 			if (pPlayerScores[ubPlayer] > pPlayerScores[ubPlayer-1]) {
 				ubDone = 0;
-				// swap punktów
+				// swap punktï¿½w
 				uwTmp = pPlayerScores[ubPlayer-1];
 				pPlayerScores[ubPlayer-1] = pPlayerScores[ubPlayer];
 				pPlayerScores[ubPlayer] = uwTmp;
@@ -225,17 +225,17 @@ void hudSummary(void) {
 		}
 	} while (!ubDone);
 	
-	// Odrysuj ca³y HUD bez zaznaczania aktywnego gracza
+	// Odrysuj caï¿½y HUD bez zaznaczania aktywnego gracza
 	pTmpCurr = g_pCurrPlayer;
-	g_pCurrPlayer = 0; // ¿eby nie odrysowa³ nigdzie kafla
+	g_pCurrPlayer = 0; // ï¿½eby nie odrysowaï¿½ nigdzie kafla
 	hudRedrawAll();
 	g_pCurrPlayer = pTmpCurr;
 	
-	// Wypisz numery zajêtych miejsc
+	// Wypisz numery zajï¿½tych miejsc
 	uwPrevScore = 0;
 	ubPlace = 0;
 	for (ubPlayer = 0; ubPlayer != g_sGameConfig.ubPlayerCount; ++ubPlayer) {
-		// Jeœli gorszy wynik to ni¿sze miejsce - za³atwia ex aequo
+		// Jeï¿½li gorszy wynik to niï¿½sze miejsce - zaï¿½atwia ex aequo
 		if (uwPrevScore > pPlayerScores[ubPlayer]) {
 			++ubPlace;
 		}

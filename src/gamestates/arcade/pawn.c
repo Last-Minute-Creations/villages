@@ -1,4 +1,5 @@
 #include "pawn.h"
+#include <ace/types.h>
 
 /* Globals */
 struct BitMap *g_pPawnsBitMap;
@@ -6,7 +7,7 @@ UWORD *s_pPawnMask;
 
 /* Functions */
 void pawnCreate(void) {
-	// wczytanie pionków
+	// wczytanie pionkï¿½w
 	g_pPawnsBitMap = bitmapCreateFromFile("data/bitmaps/pawns.bm");
 	s_pPawnMask = allocChip(80*sizeof(UWORD));
 
@@ -14,7 +15,7 @@ void pawnCreate(void) {
 	fread(s_pPawnMask, 80, sizeof(UWORD), pFile);
 	fclose(pFile);
 
-	// init listy pionów
+	// init listy pionï¿½w
 	g_sGameConfig.ubPawnCount = 0;
 	g_sGameConfig.pPawnFirst = 0;
 }
@@ -36,19 +37,19 @@ void pawnDestroy(void) {
 }
 
 UBYTE pawnIsPlaceable(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx) {
-	// Próba postawienia nie na najœwie¿szym kaflu
+	// Prï¿½ba postawienia nie na najï¿½wieï¿½szym kaflu
 	if ((g_sLastTileCoord.uwX != uwTileX) || (g_sLastTileCoord.uwY != uwTileY)) {
 		return 0;
 	}
-	// Próba postawienia na naro¿ach
+	// Prï¿½ba postawienia na naroï¿½ach
 	if (((ubLogicDataIdx & 1) == 0) && ubLogicDataIdx != 4) {
 		return 0;
 	}
-	// Próba postawienia na trawie
+	// Prï¿½ba postawienia na trawie
 	if (g_pTileDefs[g_pTileBuffer->pTileData[uwTileX][uwTileY]].pLogicData[ubLogicDataIdx] == LOGIC_GRASS) {
 		return 0;
 	}
-	// Próba postawienia na cudzej konstrukcji
+	// Prï¿½ba postawienia na cudzej konstrukcji
 	if (logicIsStructureOccupied(uwTileX, uwTileY, ubLogicDataIdx)) {
 		return 0;
 	}
@@ -75,9 +76,9 @@ void pawnPlace(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx, tPlayer *pPla
 	--pPlayer->ubPawnsLeft;
 	logWrite("Placed pawn @logicIdx %u on tile %ux%u\n", ubLogicDataIdx, uwTileX, uwTileY);
 
-	UWORD uwTileOffsX = (uwTileX * g_pTileBuffer->ubTileSize) % ((g_pTileBuffer->ubTileSize * 4) + WINDOW_SCREEN_WIDTH);
+	UWORD uwTileOffsX = (uwTileX * g_pTileBuffer->ubTileSize) % ((g_pTileBuffer->ubTileSize * 4) + SCREEN_PAL_WIDTH);
 	UWORD uwTileOffsY = (uwTileY * g_pTileBuffer->ubTileSize) % g_pTileBuffer->pScrollManager->uwBmAvailHeight;
-	UBYTE ubAddY = (uwTileX * g_pTileBuffer->ubTileSize) / ((g_pTileBuffer->ubTileSize * 4) + WINDOW_SCREEN_WIDTH);
+	UBYTE ubAddY = (uwTileX * g_pTileBuffer->ubTileSize) / ((g_pTileBuffer->ubTileSize * 4) + SCREEN_PAL_WIDTH);
 
 	blitCopyMask(
 		g_pPawnsBitMap, 0, g_pCurrPlayer->ubIdx * 10,
@@ -107,10 +108,10 @@ void pawnRemove(tPawn *pPawn) {
 	logWrite("Freed pawn @addr: %p", pPawn);
 	freeMem(pPawn, sizeof(tPawn));
 }
-
-void pawnRedrawCallback(UWORD uwTileX, UWORD uwTileY, struct BitMap *pBmDest, UWORD uwBitMapX, UWORD uwBitMapY) {
+				        
+void pawnRedrawCallback(UWORD uwTileX, UWORD uwTileY, tBitMap *pBitMap, UWORD uwBitMapX, UWORD uwBitMapY) {
 	if (!g_pTileBuffer->pTileData[uwTileX][uwTileY]) {
-		return; // ANTYMU£: nie rób nic jeœli kafel jest zerowy
+		return; // ANTYMUï¿½: nie rï¿½b nic jeï¿½li kafel jest zerowy
 	}
 
 	tPawn *pPawn = g_sGameConfig.pPawnFirst;

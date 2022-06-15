@@ -3,9 +3,9 @@
 
 #include "config.h"
 
-#include "ACE:utils/memory.h"
-#include "ACE:managers/log.h"
-#include "ACE:managers/rand.h"
+#include <ace/managers/memory.h>
+#include <ace/managers/log.h>
+#include <ace/managers/rand.h>
 
 #include "gamestates/arcade/arcade.h"
 #include "gamestates/arcade/logic.h"

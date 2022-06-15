@@ -1,8 +1,8 @@
 #include "menu.h"
 
 /* Globals */
-static tExtView *s_pMenuExtView;
-static tExtVPort *s_pMenuExtVPort;
+static tView *s_pMenuExtView;
+static tVPort *s_pMenuExtVPort;
 static struct BitMap *s_pSplashBitMap;
 static struct BitMap *s_pGrassBitMap;
 
@@ -12,8 +12,8 @@ void gsMenuCreate(void) {
 	logPushIndent();
 	
 	s_pMenuExtView = extViewCreate(0, 0, 0);
-	s_pMenuExtVPort = extViewAddVPort(s_pMenuExtView, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, WINDOW_SCREEN_BPP);
-	simpleBufferManagerCreate(s_pMenuExtVPort, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+	s_pMenuExtVPort = extViewAddVPort(s_pMenuExtView, SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT, GAME_BPP);
+	simpleBufferManagerCreate(s_pMenuExtVPort, SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT);
 	
 	paletteCreateToExtView("data/palettes/selur_v1.plt", s_pMenuExtView);
 	LoadRGB4(&s_pMenuExtVPort->sVPort, s_pMenuExtVPort->pPalette, 32);
@@ -61,9 +61,9 @@ void gsMenuCreate(void) {
 		);
 	}
 	
-	fontDrawStr(s_pSplashBitMap, g_pFont, WINDOW_SCREEN_WIDTH >> 1, 180, "Click to start", COLOR_DRKGREEN, FONT_CENTER | FONT_COOKIE | FONT_SHADOW);
-	fontDrawStr(s_pSplashBitMap, g_pFont, WINDOW_SCREEN_WIDTH >> 1, 215, "All rights reserved 2014", COLOR_DRKGREEN, FONT_CENTER | FONT_COOKIE | FONT_SHADOW);
-	fontDrawStr(s_pSplashBitMap, g_pFont, WINDOW_SCREEN_WIDTH >> 1, 230, "KaiN, Proxy, Selur, JnR", COLOR_DRKGREEN, FONT_CENTER | FONT_COOKIE | FONT_SHADOW);
+	fontDrawStr(s_pSplashBitMap, g_pFont, SCREEN_PAL_WIDTH >> 1, 180, "Click to start", COLOR_DRKGREEN, FONT_CENTER | FONT_COOKIE | FONT_SHADOW);
+	fontDrawStr(s_pSplashBitMap, g_pFont, SCREEN_PAL_WIDTH >> 1, 215, "All rights reserved 2014", COLOR_DRKGREEN, FONT_CENTER | FONT_COOKIE | FONT_SHADOW);
+	fontDrawStr(s_pSplashBitMap, g_pFont, SCREEN_PAL_WIDTH >> 1, 230, "KaiN, Proxy, Selur, JnR", COLOR_DRKGREEN, FONT_CENTER | FONT_COOKIE | FONT_SHADOW);
 
 	MrgCop(&s_pMenuExtView->sView);
 	windowLoadExtView(s_pMenuExtView);
@@ -78,12 +78,12 @@ void gsMenuSplashSetup(void) {
 	// blitCopyAligned(
 		// s_pSplashBitMap, 0, 0,
 		// s_pMenuExtVPort->sVPort.RasInfo->BitMap, 0, 0,
-		// WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT
+		// SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT
 	// );
 	blitCopy(
 		s_pSplashBitMap, 0, 0,
 		s_pMenuExtVPort->sVPort.RasInfo->BitMap, 0, 0,
-		WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, MINTERM_COOKIE, 0xFF
+		SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT, MINTERM_COOKIE, 0xFF
 	);
 	mouseSetPointer(g_sMouseManager.pBlankCursor, 1, 16, 0, 0);
 	
@@ -119,21 +119,21 @@ void gsMenuLobbySetup(void) {
 	}
 
 	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, 64, 120, "Game mode", COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW); 
-	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, WINDOW_SCREEN_WIDTH - 115, 120, "[                 ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
-	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, WINDOW_SCREEN_WIDTH - 115, 120, "classic", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
+	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH - 115, 120, "[                 ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
+	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH - 115, 120, "classic", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
 
 	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, 64, 140, "Pawn count", COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW);
-	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, WINDOW_SCREEN_WIDTH - 115, 140, "[                 ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
+	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH - 115, 140, "[                 ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
 	char szPawnCount[3];
 	sprintf(szPawnCount, "%hhu", g_sGameConfig.ubPawnsPerPlayer);
-	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, WINDOW_SCREEN_WIDTH - 115, 140, szPawnCount, COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
+	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH - 115, 140, szPawnCount, COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
 
 	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, 64, 160, "Tile set", COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW);
-	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, WINDOW_SCREEN_WIDTH - 115, 160, "[                 ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
-	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, WINDOW_SCREEN_WIDTH - 115, 160, "goblins", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
+	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH - 115, 160, "[                 ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
+	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH - 115, 160, "goblins", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
 
-	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, WINDOW_SCREEN_WIDTH >> 1, 200, "[       play       ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
-	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, WINDOW_SCREEN_WIDTH >> 1, 220, "[    how to play   ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
+	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH >> 1, 200, "[       play       ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
+	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH >> 1, 220, "[    how to play   ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
 
 	mouseSetPointer(g_pCursorData, 16, 16, 0, 0);
 	gameChangeLoop(gsMenuLobbyLoop);
@@ -158,21 +158,21 @@ void gsMenuLobbyLoop(void) {
 			}
 		}
 
-		if (mouseIsIntersects(WINDOW_SCREEN_WIDTH - 115 - (95 >> 1), 140, 95, 15) && (g_sGameConfig.ubPawnsPerPlayer < 16)) { // Pawns
+		if (mouseIsIntersects(SCREEN_PAL_WIDTH - 115 - (95 >> 1), 140, 95, 15) && (g_sGameConfig.ubPawnsPerPlayer < 16)) { // Pawns
 			char szPawnCount[3];
 			sprintf(szPawnCount, "%hhu", g_sGameConfig.ubPawnsPerPlayer);
-			fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, WINDOW_SCREEN_WIDTH - 115, 140, szPawnCount, COLOR_WHITE, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
+			fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH - 115, 140, szPawnCount, COLOR_WHITE, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
 
 			g_sGameConfig.ubPawnsPerPlayer += 1;
 			sprintf(szPawnCount, "%hhu", g_sGameConfig.ubPawnsPerPlayer);
-			fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, WINDOW_SCREEN_WIDTH - 115, 140, szPawnCount, COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
+			fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH - 115, 140, szPawnCount, COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
 		}
-		else if (mouseIsIntersects((WINDOW_SCREEN_WIDTH >> 1) - (109 >> 1), 200, 109, 15)) { // Play
+		else if (mouseIsIntersects((SCREEN_PAL_WIDTH >> 1) - (109 >> 1), 200, 109, 15)) { // Play
 			gsMenuPlayAction();
 
 			return;
 		}
-		else if (mouseIsIntersects((WINDOW_SCREEN_WIDTH >> 1) - (109 >> 1), 220, 109, 15)) { // How to
+		else if (mouseIsIntersects((SCREEN_PAL_WIDTH >> 1) - (109 >> 1), 220, 109, 15)) { // How to
 			gsMenuHowToAction();
 
 			return;
@@ -180,14 +180,14 @@ void gsMenuLobbyLoop(void) {
 	}
 
 	if (mouseUse(MOUSE_RMB)) {
-		if (mouseIsIntersects(WINDOW_SCREEN_WIDTH - 115 - (95 >> 1), 140, 95, 15) && (7 < g_sGameConfig.ubPawnsPerPlayer)) { // Pawns
+		if (mouseIsIntersects(SCREEN_PAL_WIDTH - 115 - (95 >> 1), 140, 95, 15) && (7 < g_sGameConfig.ubPawnsPerPlayer)) { // Pawns
 			char szPawnCount[3];
 			sprintf(szPawnCount, "%hhu", g_sGameConfig.ubPawnsPerPlayer);
-			fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, WINDOW_SCREEN_WIDTH - 115, 140, szPawnCount, COLOR_WHITE, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
+			fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH - 115, 140, szPawnCount, COLOR_WHITE, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
 
 			g_sGameConfig.ubPawnsPerPlayer -= 1;
 			sprintf(szPawnCount, "%hhu", g_sGameConfig.ubPawnsPerPlayer);
-			fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, WINDOW_SCREEN_WIDTH - 115, 140, szPawnCount, COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
+			fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH - 115, 140, szPawnCount, COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
 		}
 	}
 }
@@ -209,7 +209,7 @@ void gsMenuDestroy(void) {
 void gsMenuDrawBg(void) {
 	UWORD uwX, uwY;
 	// pierwszy wiersz
-	for (uwX = 0; uwX < WINDOW_SCREEN_WIDTH; uwX += 32) {
+	for (uwX = 0; uwX < SCREEN_PAL_WIDTH; uwX += 32) {
 		blitCopyAligned(
 			s_pGrassBitMap, 0, 0,
 			s_pMenuExtVPort->sVPort.RasInfo->BitMap, uwX, 0,
@@ -217,11 +217,11 @@ void gsMenuDrawBg(void) {
 		);
 	}
 	// blitowanie wierszami
-	for (uwY = 0; uwY < WINDOW_SCREEN_HEIGHT; uwY += 32) {
+	for (uwY = 0; uwY < SCREEN_PAL_HEIGHT; uwY += 32) {
 		blitCopyAligned(
 			s_pMenuExtVPort->sVPort.RasInfo->BitMap, 0, 0,
 			s_pMenuExtVPort->sVPort.RasInfo->BitMap, 0, uwY,
-			WINDOW_SCREEN_WIDTH, 32
+			SCREEN_PAL_WIDTH, 32
 		);
 	}
 }

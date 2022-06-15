@@ -1,9 +1,8 @@
 #ifndef GUARD_GAMESTATE_ARCADE_HUD_H
 #define GUARD_GAMESTATE_ARCADE_HUD_H
 
-#include "ACE:utils/extview.h"
-#include "ACE:utils/rect.h"
-#include "ACE:utils/font.h"
+#include <ace/utils/extview.h>
+#include <ace/utils/font.h>
 
 #include "config.h"
 #include "gamestates/arcade/arcade.h"
@@ -23,9 +22,9 @@ typedef struct {
 typedef struct {
 	UBYTE ubExpanded;
 	struct BitMap *pRectBfr;
-	tExtView *pExtView;
-	tExtVPort *pMainVPort;
-	tExtVPort *pHudVPort;
+	tView *pExtView;
+	tVPort *pMainVPort;
+	tVPort *pHudVPort;
 	tHudPlayerCache *pPlayerCache;
 } tHudManager;
 
@@ -34,7 +33,7 @@ extern tHudManager g_sHudManager;
 
 /* Functions */
 void hudCreate(
-	IN tExtView *pExtView
+	IN tView *pExtView
 );
 
 void hudDestroy(void);

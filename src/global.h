@@ -2,9 +2,9 @@
 #define GUARD_GLOBAL_H
 
 #include "config.h"
-#include "ACE:utils/font.h"
-#include "ACE:utils/coord.h"
-#include "ACE:managers/mouse.h"
+#include <ace/utils/font.h>
+#include <ace/types.h>
+#include <ace/managers/mouse.h>
 
 #define POINTER_NW 0
 #define POINTER_N  1
@@ -25,7 +25,7 @@ typedef struct _tPlayer {
 } tPlayer;
 
 typedef struct _tPawn {
-	tCoord sTileCoord;
+	tUwCoordYX sTileCoord;
 	UBYTE ubLogicDataIdx;
 	tPlayer *pPlayer;
 	struct _tPawn *pPrev;
@@ -44,8 +44,8 @@ typedef struct {
 extern tFont *g_pFont;
 extern struct BitMap *g_pCharactersBitMap;
 
-extern __chip UWORD g_pCursorData[288];
-extern __chip UWORD g_pPawnCursorData[36];
+extern CHIP UWORD g_pCursorData[288];
+extern CHIP UWORD g_pPawnCursorData[36];
 extern WORD g_pPointerSpots[8][2];
 extern BYTE g_pPointerDirs[3][3];
 

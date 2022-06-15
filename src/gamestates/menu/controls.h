@@ -2,7 +2,7 @@
 #define GUARD_GAMESTATE_MENU_CONTROLS_H
 
 #include <clib/exec_protos.h> // Amiga typedefs
-#include "ACE:utils/coord.h"
+#include <ace/utils/coord.h>
 
 #define CONTROL_BTN
 #define CONTROL_SELECT
@@ -19,8 +19,8 @@ typedef struct {
 
 typedef struct _tControl {
 	struct _tControl *pNext;
-	tCoord sLabelCoord;
-	tCoord sCoord;
+	tUwCoordYX sLabelCoord;
+	tUwCoordYX sCoord;
 	UBYTE ubType;
 	union {
 		tBtnControl sBtnExtra;

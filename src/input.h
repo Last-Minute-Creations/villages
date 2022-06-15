@@ -6,11 +6,11 @@
 
 #include "config.h"
 
-#include "ACE:managers/window.h"
-#include "ACE:managers/key.h"
-#include "ACE:managers/mouse.h"
-#include "ACE:managers/joy.h"
-#include "ACE:managers/log.h"
+#include <ace/managers/window.h>
+#include <ace/managers/key.h>
+#include <ace/managers/mouse.h>
+#include <ace/managers/joy.h>
+#include <ace/managers/log.h>
 
 /* Types */
 
