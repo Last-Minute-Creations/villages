@@ -1,18 +1,16 @@
 #ifndef GUARD_CONFIG_H
 #define GUARD_CONFIG_H
 
-#include <clib/exec_protos.h> // Amiga typedefs
-
 /* Project Compilation flags */
 #define GAME_MEMLOG 0
 #define GAME_DEBUG 0
 #define GAME_BPP 5
 
 // Kolory palety
-// Nie wyrzucaj tego p�ki nie wyra�� na to zgody
-// Czasem w kodzie lepiej napisa� nazw� koloru ni� si� domy�la�, co konkretnego
-// rysuje dany kawa�ek kodu - zw�aszcza w tekstach i rectanglach
-// TODO: wywali� sta�e i wrzuci� dla palety Selura
+// Nie wyrzucaj tego poki nie wyraze na to zgody
+// Czasem w kodzie lepiej napisac nazwe koloru niz sie domyslac, co konkretnego
+// rysuje dany kawalek kodu - zwlaszcza w tekstach i rectanglach
+// TODO: wywalic stale i wrzucic dla palety Selura
 
 #define COLOR_BLACK     0
 #define COLOR_NAVY      1
@@ -48,10 +46,5 @@
 #define COLOR_30        30
 #define COLOR_31        31
 #define COLOR_32        32
-
-/* Docs */
-#define IN
-#define OUT
-#define INOUT
 
 #endif

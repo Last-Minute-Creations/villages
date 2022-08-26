@@ -3,17 +3,17 @@
 tFont *g_pFont;
 struct BitMap *g_pCharactersBitMap;
 
-__chip UWORD g_pCursorData[288];
-__chip UWORD g_pPawnCursorData[36];
+CHIP UWORD g_pCursorData[288];
+CHIP UWORD g_pPawnCursorData[36];
 
 tGameConfig g_sGameConfig = {
-	{1, 1, 1, 1, 0, 0, 0, 0}, // pPlayersSelected
-	4, // ubPlayerCount
-	0, // pPlayerFirst;
-	7, // ubPawnsPerPlayer;
-	0, // ubPawnCount;
-	0 // pPawnFirst;
-};	
+	.pPlayersSelected = {1, 1, 1, 1, 0, 0, 0, 0}, // pPlayersSelected
+	.ubPlayerCount = 4, // ubPlayerCount
+	.pPlayerFirst = 0, // pPlayerFirst
+	.ubPawnsPerPlayer = 7, // ubPawnsPerPlayer
+	.ubPawnCount = 0, // ubPawnCount
+	.pPawnFirst = 0 // pPawnFirst
+};
 
 UBYTE g_pPlayerColors[PLAYER_COUNT][2] = {
 	{13, 14},
@@ -46,11 +46,11 @@ BYTE g_pPointerDirs[3][3] = {
 void globalLoadCursorData(void) {
 	FILE *pFile;
 	pFile = fopen("data/hand.cur", "rb");
-	fseek(pFile, 9, SEEK_CUR); // pominiêcie nag³ówka: ubCursorCount + paleta
+	fseek(pFile, 9, SEEK_CUR); // pominiï¿½cie nagï¿½ï¿½wka: ubCursorCount + paleta
 	fread(g_pCursorData, 576, 1, pFile);
 	fclose(pFile);
 	pFile = fopen("data/pawn.cur", "rb");
-	fseek(pFile, 9, SEEK_CUR); // pominiêcie nag³ówka: ubCursorCount + paleta
+	fseek(pFile, 9, SEEK_CUR); // pominiï¿½cie nagï¿½ï¿½wka: ubCursorCount + paleta
 	fread(g_pPawnCursorData, 72, 1, pFile);
 	fclose(pFile);
 	mouseSetPointer(g_pCursorData, 16, 16, 0, 0);
@@ -61,7 +61,7 @@ void globalCreate(void) {
 	logPushIndent();
 	globalLoadCursorData();
 	g_pFont = fontCreate("data/fonts/arpegius-15.fnt");
-	g_pCharactersBitMap = bitmapCreateFromFile("data/bitmaps/goblins.bm");
+	g_pCharactersBitMap = bitmapCreateFromFile("data/bitmaps/goblins.bm", FALSE);
 	logPopIndent();
 	logWrite("globalCreate end\n");
 }

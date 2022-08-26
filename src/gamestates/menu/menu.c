@@ -10,17 +10,17 @@ static struct BitMap *s_pGrassBitMap;
 void gsMenuCreate(void) {
 	logWrite("gsMenuCreate begin\n");
 	logPushIndent();
-	
+
 	s_pMenuExtView = extViewCreate(0, 0, 0);
 	s_pMenuExtVPort = extViewAddVPort(s_pMenuExtView, SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT, GAME_BPP);
 	simpleBufferManagerCreate(s_pMenuExtVPort, SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT);
-	
+
 	paletteCreateToExtView("data/palettes/selur_v1.plt", s_pMenuExtView);
 	LoadRGB4(&s_pMenuExtVPort->sVPort, s_pMenuExtVPort->pPalette, 32);
 	MakeVPort(&s_pMenuExtView->sView, &s_pMenuExtVPort->sVPort);
 
 	s_pGrassBitMap = bitmapCreateFromFile("data/bitmaps/grass.bm");
-	
+
 	// Splash
 	s_pSplashBitMap = bitmapCreateFromFile("data/bitmaps/splash.bm");
 	UBYTE i;
@@ -60,7 +60,7 @@ void gsMenuCreate(void) {
 			MINTERM_A, 0xFF
 		);
 	}
-	
+
 	fontDrawStr(s_pSplashBitMap, g_pFont, SCREEN_PAL_WIDTH >> 1, 180, "Click to start", COLOR_DRKGREEN, FONT_CENTER | FONT_COOKIE | FONT_SHADOW);
 	fontDrawStr(s_pSplashBitMap, g_pFont, SCREEN_PAL_WIDTH >> 1, 215, "All rights reserved 2014", COLOR_DRKGREEN, FONT_CENTER | FONT_COOKIE | FONT_SHADOW);
 	fontDrawStr(s_pSplashBitMap, g_pFont, SCREEN_PAL_WIDTH >> 1, 230, "KaiN, Proxy, Selur, JnR", COLOR_DRKGREEN, FONT_CENTER | FONT_COOKIE | FONT_SHADOW);
@@ -69,7 +69,7 @@ void gsMenuCreate(void) {
 	windowLoadExtView(s_pMenuExtView);
 
 	g_sGameManager.pStateFirst->pLoopCallback();
-	
+
 	logPopIndent();
 	logWrite("gsMenuCreate end\n");
 }
@@ -86,7 +86,7 @@ void gsMenuSplashSetup(void) {
 		SCREEN_PAL_WIDTH, SCREEN_PAL_HEIGHT, MINTERM_COOKIE, 0xFF
 	);
 	mouseSetPointer(g_sMouseManager.pBlankCursor, 1, 16, 0, 0);
-	
+
 	gameChangeLoop(gsMenuSplashLoop);
 }
 
@@ -118,7 +118,7 @@ void gsMenuLobbySetup(void) {
 		);
 	}
 
-	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, 64, 120, "Game mode", COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW); 
+	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, 64, 120, "Game mode", COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW);
 	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH - 115, 120, "[                 ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
 	fontDrawStr(s_pMenuExtVPort->sVPort.RasInfo->BitMap, g_pFont, SCREEN_PAL_WIDTH - 115, 120, "classic", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW);
 
@@ -195,13 +195,13 @@ void gsMenuLobbyLoop(void) {
 void gsMenuDestroy(void) {
 	logWrite("gsMenuDestroy begin\n");
 	logPushIndent();
-	
+
 	LoadView(0);
 
 	bitmapDestroy(s_pGrassBitMap);
 	bitmapDestroy(s_pSplashBitMap);
 	extViewDestroy(s_pMenuExtView);
-	
+
 	logPopIndent();
 	logWrite("gsMenuDestroy end\n");
 }
@@ -231,7 +231,7 @@ void gsMenuCharacterAction(UBYTE ubPlayer) {
 		if (2 < g_sGameConfig.ubPlayerCount) {
 			g_sGameConfig.pPlayersSelected[ubPlayer] = 0;
 			--g_sGameConfig.ubPlayerCount;
-			
+
 			blitCopyAligned(
 				g_pCharactersBitMap, (32 * ubPlayer), 0,
 				s_pMenuExtVPort->sVPort.RasInfo->BitMap, 32 + (32 * ubPlayer), 70,
@@ -258,3 +258,9 @@ void gsMenuPlayAction(void) {
 void gsMenuHowToAction(void) {
 	// gameLoadState(gsHowToCreate, gsHowToLoop, gsHowToDestroy);
 }
+
+tState g_sStateMenu = {
+	.cbCreate = gsMenuCreate,
+	.cbDestroy = gsMenuDestroy,
+	.cbLoop = gsMenuSplashSetup,
+};

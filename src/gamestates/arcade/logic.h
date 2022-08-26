@@ -45,7 +45,7 @@ void logicCountPoints(void);
 void logicSumWalkerResults(void);
 
 void logicAssignPoints(
-	IN UBYTE *pPlayerPawnCounts
+	UBYTE *pPlayerPawnCounts
 );
 
 UBYTE logicIsStructureOccupied(
@@ -57,27 +57,27 @@ UBYTE logicIsStructureOccupied(
 void logicListMakeDistinct(void);
 
 void logicWalkMakeStep(
-	IN UWORD uwTileX,
-	IN UWORD uwTileY,
-	IN UBYTE ubLogicDataIdx
+	UWORD uwTileX,
+	UWORD uwTileY,
+	UBYTE ubLogicDataIdx
 );
 
 void logicWalkRoad(
-	IN UWORD uwTileX,
-	IN UWORD uwTileY, 
-	IN UBYTE ubLogicDataIdx
+	UWORD uwTileX,
+	UWORD uwTileY,
+	UBYTE ubLogicDataIdx
 );
 
 void logicWalkVillage(
-	IN UWORD uwTileX,
-	IN UWORD uwTileY, 
-	IN UBYTE ubLogicDataIdx
+	UWORD uwTileX,
+	UWORD uwTileY,
+	UBYTE ubLogicDataIdx
 );
 
 void logicWalkSwamp(
-	IN UWORD uwTileX,
-	IN UWORD uwTileY,
-	IN UBYTE ubLogicDataIdx
+	UWORD uwTileX,
+	UWORD uwTileY,
+	UBYTE ubLogicDataIdx
 );
 
 #endif

@@ -24,6 +24,8 @@
 
 /* Globals */
 
+extern tState g_sStateMenu;
+
 /* Functions */
 void gsMenuCreate(void);
 
@@ -40,7 +42,7 @@ void gsMenuDestroy(void);
 void gsMenuDrawBg(void);
 
 void gsMenuCharacterAction(
-	IN UBYTE ubPlayer
+	UBYTE ubPlayer
 );
 
 void gsMenuPlayAction(void);

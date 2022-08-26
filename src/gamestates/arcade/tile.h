@@ -35,15 +35,15 @@ void tileStackCreate(void);
 void tileStackDestroy(void);
 
 UBYTE tileIsPlaceable(
-	IN UWORD uwTileX,
-	IN UWORD uwTileY,
-	IN tTile *pTile
+	UWORD uwTileX,
+	UWORD uwTileY,
+	tTile *pTile
 );
 
 void tilePlace(
-	IN UWORD uwTileX,
-	IN UWORD uwTileY,
-	IN tTile *pTile
+	UWORD uwTileX,
+	UWORD uwTileY,
+	tTile *pTile
 );
 
 void tileRotate(void);

@@ -1,5 +1,8 @@
 #include "pawn.h"
+#include <ace/generic/screen.h>
 #include <ace/types.h>
+#include "arcade.h"
+
 
 /* Globals */
 struct BitMap *g_pPawnsBitMap;
@@ -7,24 +10,24 @@ UWORD *s_pPawnMask;
 
 /* Functions */
 void pawnCreate(void) {
-	// wczytanie pionk�w
-	g_pPawnsBitMap = bitmapCreateFromFile("data/bitmaps/pawns.bm");
-	s_pPawnMask = allocChip(80*sizeof(UWORD));
+	// wczytanie pionkow
+	g_pPawnsBitMap = bitmapCreateFromFile("data/bitmaps/pawns.bm", FALSE);
+	s_pPawnMask = memAllocChip(80 * sizeof(UWORD));
 
 	FILE *pFile = fopen("data/pawns.msk", "rb");
 	fread(s_pPawnMask, 80, sizeof(UWORD), pFile);
 	fclose(pFile);
 
-	// init listy pion�w
+	// init listy pionow
 	g_sGameConfig.ubPawnCount = 0;
 	g_sGameConfig.pPawnFirst = 0;
 }
 
 void pawnDestroy(void) {
-	freeMem(s_pPawnMask, 160);
+	memFree(s_pPawnMask, 160);
 	bitmapDestroy(g_pPawnsBitMap);
-	tPawn *pPawn = g_sGameConfig.pPawnFirst;
-	tPawn *pNext;
+	// tPawn *pPawn = g_sGameConfig.pPawnFirst;
+	// tPawn *pNext;
 	// while(pPawn) {
 		// pNext = pPawn->pNext;
 		// freeMem(pPawn, sizeof(tPawn));
@@ -58,7 +61,7 @@ UBYTE pawnIsPlaceable(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx) {
 }
 
 void pawnPlace(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx, tPlayer *pPlayer) {
-	tPawn *pPawn = allocFastFirst(sizeof(tPawn));
+	tPawn *pPawn = memAllocFast(sizeof(tPawn));
 	logWrite("Created pawn @addr: %p\n", pPawn);
 	pPawn->sTileCoord.uwX = uwTileX;
 	pPawn->sTileCoord.uwY = uwTileY;
@@ -76,18 +79,7 @@ void pawnPlace(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx, tPlayer *pPla
 	--pPlayer->ubPawnsLeft;
 	logWrite("Placed pawn @logicIdx %u on tile %ux%u\n", ubLogicDataIdx, uwTileX, uwTileY);
 
-	UWORD uwTileOffsX = (uwTileX * g_pTileBuffer->ubTileSize) % ((g_pTileBuffer->ubTileSize * 4) + SCREEN_PAL_WIDTH);
-	UWORD uwTileOffsY = (uwTileY * g_pTileBuffer->ubTileSize) % g_pTileBuffer->pScrollManager->uwBmAvailHeight;
-	UBYTE ubAddY = (uwTileX * g_pTileBuffer->ubTileSize) / ((g_pTileBuffer->ubTileSize * 4) + SCREEN_PAL_WIDTH);
-
-	blitCopyMask(
-		g_pPawnsBitMap, 0, g_pCurrPlayer->ubIdx * 10,
-		g_pTileBuffer->pVPort->sVPort.RasInfo->BitMap,
-		uwTileOffsX + (10 * (ubLogicDataIdx % 3)) + 1,
-		uwTileOffsY + ubAddY + (10 * (ubLogicDataIdx / 3)) + 1,
-		10, 10,
-		s_pPawnMask
-	);
+	tileBufferDrawTile(g_pTileBuffer, uwTileX, uwTileY);
 }
 
 void pawnRemove(tPawn *pPawn) {
@@ -106,12 +98,12 @@ void pawnRemove(tPawn *pPawn) {
 	++pPawn->pPlayer->ubPawnsLeft;
 
 	logWrite("Freed pawn @addr: %p", pPawn);
-	freeMem(pPawn, sizeof(tPawn));
+	memFree(pPawn, sizeof(tPawn));
 }
-				        
+
 void pawnRedrawCallback(UWORD uwTileX, UWORD uwTileY, tBitMap *pBitMap, UWORD uwBitMapX, UWORD uwBitMapY) {
 	if (!g_pTileBuffer->pTileData[uwTileX][uwTileY]) {
-		return; // ANTYMU�: nie r�b nic je�li kafel jest zerowy
+		return; // ANTYMUL: nie rob nic jesli kafel jest zerowy
 	}
 
 	tPawn *pPawn = g_sGameConfig.pPawnFirst;
@@ -119,7 +111,7 @@ void pawnRedrawCallback(UWORD uwTileX, UWORD uwTileY, tBitMap *pBitMap, UWORD uw
 		if ((pPawn->sTileCoord.uwX == uwTileX) && (pPawn->sTileCoord.uwY == uwTileY)) {
 			blitCopyMask(
 				g_pPawnsBitMap, 0, pPawn->pPlayer->ubIdx * 10,
-				g_pTileBuffer->pVPort->sVPort.RasInfo->BitMap,
+				g_pTileBuffer->pScroll->pBack,
 				uwBitMapX + (10 * (pPawn->ubLogicDataIdx % 3)) + 1,
 				uwBitMapY + (10 * (pPawn->ubLogicDataIdx / 3)) + 1,
 				10, 10,

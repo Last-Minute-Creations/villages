@@ -21,28 +21,28 @@ void pawnCreate(void);
 void pawnDestroy(void);
 
 UBYTE pawnIsPlaceable(
-	IN UWORD uwTileX,
-	IN UWORD uwTileY,
-	IN UBYTE ubLogicDataIdx
+	UWORD uwTileX,
+	UWORD uwTileY,
+	UBYTE ubLogicDataIdx
 );
 
 void pawnPlace(
-	IN UWORD uwTileX,
-	IN UWORD uwTileY,
-	IN UBYTE ubLogicDataIdx,
-	IN tPlayer *pPlayer
+	UWORD uwTileX,
+	UWORD uwTileY,
+	UBYTE ubLogicDataIdx,
+	tPlayer *pPlayer
 );
 
 void pawnRemove(
-	IN tPawn *pPawn
+	tPawn *pPawn
 );
 
 void pawnRedrawCallback(
-	IN UWORD uwTileX,
-	IN UWORD uwTileY,
-	IN struct BitMap *pBmDest,
-	IN UWORD uwBitMapX,
-	IN UWORD uwBitMapY
+	UWORD uwTileX,
+	UWORD uwTileY,
+	struct BitMap *pBmDest,
+	UWORD uwBitMapX,
+	UWORD uwBitMapY
 );
 
 #endif

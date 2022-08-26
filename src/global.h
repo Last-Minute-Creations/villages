@@ -2,9 +2,11 @@
 #define GUARD_GLOBAL_H
 
 #include "config.h"
+
 #include <ace/utils/font.h>
 #include <ace/types.h>
 #include <ace/managers/mouse.h>
+#include <ace/managers/state.h>
 
 #define POINTER_NW 0
 #define POINTER_N  1
@@ -51,6 +53,7 @@ extern BYTE g_pPointerDirs[3][3];
 
 extern tGameConfig g_sGameConfig;
 extern UBYTE g_pPlayerColors[PLAYER_COUNT][2];
+extern tStateManager *g_pGameStateManager;
 
 void globalCreate(void);
 void globalDestroy(void);

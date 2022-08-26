@@ -1,8 +1,7 @@
 #ifndef GUARD_GAMESTATE_MENU_CONTROLS_H
 #define GUARD_GAMESTATE_MENU_CONTROLS_H
 
-#include <clib/exec_protos.h> // Amiga typedefs
-#include <ace/utils/coord.h>
+#include <ace/types.h>
 
 #define CONTROL_BTN
 #define CONTROL_SELECT

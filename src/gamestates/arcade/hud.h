@@ -1,12 +1,17 @@
 #ifndef GUARD_GAMESTATE_ARCADE_HUD_H
 #define GUARD_GAMESTATE_ARCADE_HUD_H
 
+#include <ace/managers/viewport/simplebuffer.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/font.h>
 
 #include "config.h"
 #include "gamestates/arcade/arcade.h"
 #include "gamestates/arcade/tile.h"
+
+/* Defines */
+
+#define HUD_VPORT_HEIGHT 32
 
 /* Types */
 
@@ -21,11 +26,13 @@ typedef struct {
 
 typedef struct {
 	UBYTE ubExpanded;
-	struct BitMap *pRectBfr;
-	tView *pExtView;
+	tView *pView;
 	tVPort *pMainVPort;
 	tVPort *pHudVPort;
+	tSimpleBufferManager *pSimpleBuffer;
+	tCameraManager *pCamera;
 	tHudPlayerCache *pPlayerCache;
+	tTextBitMap *pTextBitMap;
 } tHudManager;
 
 /* Globals */
@@ -33,7 +40,7 @@ extern tHudManager g_sHudManager;
 
 /* Functions */
 void hudCreate(
-	IN tView *pExtView
+	tView *pView
 );
 
 void hudDestroy(void);
@@ -41,15 +48,15 @@ void hudDestroy(void);
 void hudRedrawAll(void);
 
 void hudRedrawPlayer(
-	IN tPlayer *pPlayer
+	const tPlayer *pPlayer
 );
 
 void hudDrawLargePawn(
-	IN tPlayer *pPlayer
+	const tPlayer *pPlayer
 );
 
 void hudShowPlayer(
-	IN tPlayer *pPlayer
+	const tPlayer *pPlayer
 );
 
 void hudExpand(void);

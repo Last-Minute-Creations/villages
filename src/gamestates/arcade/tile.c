@@ -32,7 +32,7 @@ void tileStackCreate(void) {
 	}
 	g_sTileList.uwLength = g_sTileList.uwPos;
 	logWrite("Tile stack size: %u\n", g_sTileList.uwLength);
-	g_sTileList.pTileIdx = allocFastFirst(g_sTileList.uwLength);
+	g_sTileList.pTileIdx = memAllocFast(g_sTileList.uwLength);
 	
 	// generuj stos bez szuflowania
 	g_sTileList.uwPos = 0;
@@ -50,7 +50,7 @@ void tileStackCreate(void) {
 	for (g_sTileList.uwPos = 0; g_sTileList.uwPos != g_sTileList.uwLength - 1; ++g_sTileList.uwPos) {
 		// indeks dalszego kafla do zamiany
 		i = uwRandMinMax(g_sTileList.uwPos + 1, g_sTileList.uwLength - 1);
-		// swap wartoœci
+		// swap wartoï¿½ci
 		ubTile = g_sTileList.pTileIdx[g_sTileList.uwPos];
 		g_sTileList.pTileIdx[g_sTileList.uwPos] = g_sTileList.pTileIdx[i];
 		g_sTileList.pTileIdx[i] = ubTile;
@@ -63,14 +63,14 @@ void tileStackCreate(void) {
 }
 
 void tileStackDestroy(void) {
-	freeMem(g_sTileList.pTileIdx, g_sTileList.uwLength);
+	memFree(g_sTileList.pTileIdx, g_sTileList.uwLength);
 	g_sTileList.uwLength = 0;
 	g_sTileList.uwPos = 0;
 }
 
 UBYTE tileIsPlaceable(UWORD uwTileX, UWORD uwTileY, tTile *pTile) {
 	// Bounds
-	if (!uwTileX || !uwTileY || (g_pTileBuffer->sTileBounds.uwX - 1 <= uwTileX) || (g_pTileBuffer->sTileBounds.uwY - 1 <= uwTileY)) {
+	if (!uwTileX || !uwTileY || (g_pTileBuffer->uTileBounds.uwX - 1 <= uwTileX) || (g_pTileBuffer->uTileBounds.uwY - 1 <= uwTileY)) {
 		return 0;
 	}
 

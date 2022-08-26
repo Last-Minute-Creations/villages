@@ -1,37 +1,42 @@
 #include "hud.h"
 
+#include <ace/generic/screen.h>
+
+#include "global.h"
+#include "arcade.h"
+
 /* Globals */
 static struct BitMap *g_pPawnsLarge;
 tHudManager g_sHudManager;
 
 /* Functions */
-void hudCreate(tView *pExtView) {
+void hudCreate(tView *pView) {
 	UBYTE i;
 
-	g_sHudManager.pExtView = pExtView;
-	g_sHudManager.pMainVPort = (tVPort*)pExtView->sView.ViewPort;
-	g_sHudManager.pHudVPort = (tVPort*)g_sHudManager.pMainVPort->sVPort.Next;
+	g_sHudManager.pView = pView;
+	g_sHudManager.pMainVPort = pView->pFirstVPort;
+	g_sHudManager.pHudVPort = g_sHudManager.pMainVPort->pNext;
 	g_sHudManager.ubExpanded = 0;
+	g_sHudManager.pTextBitMap = fontCreateTextBitMap(g_sHudManager.pHudVPort->uwWidth, g_pFont->uwHeight);
+	g_sHudManager.pCamera = (tCameraManager *) vPortGetManager(g_sHudManager.pHudVPort, VPM_CAMERA);
+	g_sHudManager.pSimpleBuffer = (tSimpleBufferManager *) vPortGetManager(g_sHudManager.pHudVPort, VPM_SCROLL);
 	
-	g_pPawnsLarge = bitmapCreateFromFile("data/bitmaps/pawnsLarge.bm");
-	g_sHudManager.pRectBfr = rectCreateBfr(g_sHudManager.pHudVPort->sVPort.DWidth, 30, GAME_BPP);
+	g_pPawnsLarge = bitmapCreateFromFile("data/bitmaps/pawnsLarge.bm", FALSE);
 	
-	g_sHudManager.pPlayerCache = allocFastFirst(sizeof(tHudPlayerCache) * g_sGameConfig.ubPlayerCount);
-	for (i = 0; i != g_sGameConfig.ubPlayerCount; ++i) {
-		g_sHudManager.pPlayerCache[i].ubBgDrawn = 0;
+	g_sHudManager.pPlayerCache = memAllocFast(sizeof(g_sHudManager.pPlayerCache[0]) * g_sGameConfig.ubPlayerCount);
+	for (i = 0; i < g_sGameConfig.ubPlayerCount; ++i) {
+		g_sHudManager.pPlayerCache[i].ubBgDrawn = FALSE;
 	}
 	
 	hudRedrawAll();
-	// TODO: zast�pi� kodem mened�era skrolingu
-	g_sHudManager.pHudVPort->sVPort.RasInfo->RyOffset = 32 * g_pCurrPlayer->ubIdx;
-	MakeVPort(&g_sHudManager.pExtView->sView, &g_sHudManager.pHudVPort->sVPort);
-	WaitTOF();
+	// TODO: zastapic kodem menadgera skrolingu
+	cameraSetCoord(g_sHudManager.pCamera , 0, 32 * g_pCurrPlayer->ubIdx);
 }
 
 void hudDestroy(void) {
-	freeMem(g_sHudManager.pPlayerCache, sizeof(tHudPlayerCache) * g_sGameConfig.ubPlayerCount);
-	bitmapDestroy(g_sHudManager.pRectBfr);
+	memFree(g_sHudManager.pPlayerCache, sizeof(g_sHudManager.pPlayerCache[0]) * g_sGameConfig.ubPlayerCount);
 	bitmapDestroy(g_pPawnsLarge);
+	fontDestroyTextBitMap(g_sHudManager.pTextBitMap);
 }
 
 void hudRedrawAll(void) {
@@ -44,28 +49,26 @@ void hudRedrawAll(void) {
 	}
 }
 
-void hudRedrawPlayer(tPlayer *pPlayer) {
+void hudRedrawPlayer(const tPlayer *pPlayer) {
 	char szBfr[128];
-	UBYTE ubPlayerOffs;
 	UBYTE ubBgFresh = 0;
-	struct BitMap *pHudBitMap;
-	
-	pHudBitMap = g_sHudManager.pHudVPort->sVPort.RasInfo->BitMap;
-	ubPlayerOffs = pPlayer->ubIdx * 32;
+	tBitMap *pHudBitMap = g_sHudManager.pSimpleBuffer->pBack;
+	UBYTE ubPlayerOffs = pPlayer->ubIdx * 32;
 	
 	if (!g_sHudManager.pPlayerCache[pPlayer->ubIdx].ubBgDrawn) {
-		// czyszczenie t�a
-		rectFill(
-			g_sHudManager.pRectBfr, pHudBitMap,
+		// czyszczenie tla
+		blitRect(
+			pHudBitMap,
 			0, ubPlayerOffs,
-			g_sHudManager.pHudVPort->sVPort.DWidth, 30, g_pPlayerColors[pPlayer->ubIdx][1]
+			g_sHudManager.pHudVPort->uwWidth, 30,
+			g_pPlayerColors[pPlayer->ubIdx][1]
 		);
 		ubBgFresh = 1;
 		// odrysowanie ryja
 		blitCopy(
 			g_pCharactersBitMap, ubPlayerOffs + 2, 32 + 2,
-			pHudBitMap, 1, ubPlayerOffs + 1, 28, 28,
-			MINTERM_COPY, 0xff
+			pHudBitMap, 1, ubPlayerOffs + 1,
+			28, 28, MINTERM_COPY
 		);
 		g_sHudManager.pPlayerCache[pPlayer->ubIdx].ubBgDrawn = 1;
 		// wymuszenie odrysowania reszty
@@ -75,32 +78,34 @@ void hudRedrawPlayer(tPlayer *pPlayer) {
 	}
 	
 	if (g_sHudManager.pPlayerCache[pPlayer->ubIdx].wPrevScore != pPlayer->uwScore) {
-		// odrysowanie t�a score'a
+		// odrysowanie tla score'a
 		if (!ubBgFresh) {
-			rectFill(
-				g_sHudManager.pRectBfr, pHudBitMap,
+			blitRect(
+				pHudBitMap,
 				35, ubPlayerOffs + 7,
-				130, 15, g_pPlayerColors[pPlayer->ubIdx][1]
+				130, 15,
+				g_pPlayerColors[pPlayer->ubIdx][1]
 			);
 		}
 		// odrysowanie licznika score'a
-		sprintf(szBfr, "Score: %u", pPlayer->uwScore);
-		fontDrawStr(pHudBitMap, g_pFont, 35, ubPlayerOffs + 7, szBfr, COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW);
+		sprintf(szBfr, "Score: %hu", pPlayer->uwScore);
+		fontDrawStr(g_pFont, pHudBitMap, 35, ubPlayerOffs + 7, szBfr, COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW, g_sHudManager.pTextBitMap);
 		g_sHudManager.pPlayerCache[pPlayer->ubIdx].wPrevScore = pPlayer->uwScore;
 	}
 	
-	// odrysowanie t�a licznika pion�w
+	// odrysowanie tla licznika pionow
 	if (g_sHudManager.pPlayerCache[pPlayer->ubIdx].ubPrevPawns != pPlayer->ubPawnsLeft) {
 		if (!ubBgFresh) {
-			rectFill(
-				g_sHudManager.pRectBfr, pHudBitMap,
+			blitRect(
+				pHudBitMap,
 				165, ubPlayerOffs + 7,
-				125, 15, g_pPlayerColors[pPlayer->ubIdx][1]
+				125, 15,
+				g_pPlayerColors[pPlayer->ubIdx][1]
 			);
 		}
-		// odrysowanie licznika pion�w
+		// odrysowanie licznika pionow
 		sprintf(szBfr, "Goblins: %hhu", pPlayer->ubPawnsLeft);
-		fontDrawStr(pHudBitMap, g_pFont, 165, ubPlayerOffs + 7, szBfr, COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW);
+		fontDrawStr(g_pFont, pHudBitMap, 165, ubPlayerOffs + 7, szBfr, COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW, g_sHudManager.pTextBitMap);
 		g_sHudManager.pPlayerCache[pPlayer->ubIdx].ubPrevPawns = pPlayer->ubPawnsLeft;
 	}
 	
@@ -108,24 +113,25 @@ void hudRedrawPlayer(tPlayer *pPlayer) {
 	if (pPlayer == g_pCurrPlayer) {
 		if (g_ubTurnStep == TURN_PAWN) {
 			blitCopy(
-				g_pPawnsLarge, 0, 28*pPlayer->ubIdx,
-				g_sHudManager.pHudVPort->sVPort.RasInfo->BitMap, 291, pPlayer->ubIdx*32 + 1, 28, 28,
-				MINTERM_COPY, 0xFF
+				g_pPawnsLarge, 0, 28 * pPlayer->ubIdx,
+				pHudBitMap, 291, pPlayer->ubIdx * 32 + 1, 28, 28,
+				MINTERM_COPY
 			);
 		}
 		else if (g_ubTurnStep == TURN_TILE) {
 			blitCopy(
 				g_pTileBuffer->pTileSet, 2, 2 + g_sTileList.pTileIdx[g_sTileList.uwPos] * g_pTileBuffer->ubTileSize,
 				pHudBitMap, 291, ubPlayerOffs + 1, 28, 28,
-				MINTERM_COPY, 0xFF
+				MINTERM_COPY
 			);
 		}
 	}
 	else if (!g_sHudManager.pPlayerCache[pPlayer->ubIdx].ubTileErased || !ubBgFresh) {
-		rectFill(
-			g_sHudManager.pRectBfr, pHudBitMap,
+		blitRect(
+			pHudBitMap,
 			291, ubPlayerOffs + 1,
-			28, 28, g_pPlayerColors[pPlayer->ubIdx][1]
+			28, 28,
+			g_pPlayerColors[pPlayer->ubIdx][1]
 		);
 	}
 	else {
@@ -133,48 +139,46 @@ void hudRedrawPlayer(tPlayer *pPlayer) {
 	}
 }
 
-void hudShowPlayer(tPlayer *pPlayer) {
+void hudShowPlayer(const tPlayer *pPlayer) {
 	UBYTE steps[20] = {0, 3, 5, 7, 10, 12, 15, 17, 19, 21, 23, 24, 26, 27, 29, 30, 30, 31, 32, 32};
-	UBYTE ubStart = g_sHudManager.pHudVPort->sVPort.RasInfo->RyOffset;
+	UBYTE ubStart = g_sHudManager.pCamera->uPos.uwY;
 	UBYTE ubEnd = 32 * pPlayer->ubIdx;
 	UBYTE i;
 	
 	for (i = 0; i != 20; ++i) {
-		g_sHudManager.pHudVPort->sVPort.RasInfo->RyOffset = ubStart + ((ubEnd - ubStart) * steps[i]) / 32;
-		ScrollVPort(&g_sHudManager.pHudVPort->sVPort);
-		WaitTOF();
+		cameraSetCoord(g_sHudManager.pCamera, g_sHudManager.pCamera->uPos.uwX, ubStart + ((ubEnd - ubStart) * steps[i]) / 32);
+		vPortProcessManagers(g_sHudManager.pHudVPort);
+		copProcessBlocks();
+		vPortWaitForEnd(g_sHudManager.pHudVPort);
 	}
 }
 
 void hudAnimate(UBYTE ubStart, UBYTE ubStop) {
 	UBYTE stepRatios[42] = {0, 0, 10, 20, 30, 40, 50, 60, 69, 79, 88, 98, 107, 116, 125, 133, 142, 150, 158, 166, 173, 180, 187, 194, 200, 206, 212, 217, 222, 227, 232, 236, 239, 243, 245, 248, 250, 252, 253, 254, 255, 255};
-	UBYTE i;
-	UBYTE ubStep, ubStepValue;
-	if (ubStart > ubStop) {
-		ubStep = -1;
-	}
-	else {
-		ubStep = 1;
-	}
-	for (i = ubStart; i != ubStop; i += ubStep) {
-		ubStepValue = ( ( ( (g_sGameConfig.ubPlayerCount - 1) << 5 ) * stepRatios[i] ) >> 8);
-		g_sHudManager.pMainVPort->sVPort.DHeight = 223 - ubStepValue;
-		g_sHudManager.pHudVPort->sVPort.DyOffset = g_sHudManager.pMainVPort->sVPort.DHeight+2;
-		g_sHudManager.pHudVPort->sVPort.DHeight = SCREEN_PAL_HEIGHT - g_sHudManager.pHudVPort->sVPort.DyOffset;
-		if(ubStepValue < g_pCurrPlayer->ubIdx << 5) {
-			g_sHudManager.pHudVPort->sVPort.RasInfo->RyOffset = (g_pCurrPlayer->ubIdx << 5) - ubStepValue;
+	UBYTE ubStep = ubStop <= ubStart ? -1 : 1;
+
+	for (UBYTE i = ubStart; i < ubStop; i += ubStep) {
+		UBYTE ubStepValue = ((((g_sGameConfig.ubPlayerCount - 1) * HUD_VPORT_HEIGHT) * stepRatios[i]) / 256);
+		g_sHudManager.pMainVPort->uwHeight = 223 - ubStepValue;
+		g_sHudManager.pHudVPort->uwOffsY = g_sHudManager.pMainVPort->uwHeight + 2;
+		g_sHudManager.pHudVPort->uwHeight = SCREEN_PAL_HEIGHT - g_sHudManager.pHudVPort->uwOffsY;
+
+		if (ubStepValue < (g_pCurrPlayer->ubIdx * 32)) {
+			g_sHudManager.pHudVPort->uwOffsY = (g_pCurrPlayer->ubIdx * HUD_VPORT_HEIGHT) - ubStepValue;
 		}
 		else {
-			g_sHudManager.pHudVPort->sVPort.RasInfo->RyOffset = 0;
+			g_sHudManager.pHudVPort->uwOffsY = 0;
 		}
-		MakeVPort(&g_sHudManager.pExtView->sView, &g_sHudManager.pMainVPort->sVPort);
-		MakeVPort(&g_sHudManager.pExtView->sView, &g_sHudManager.pHudVPort->sVPort);
-		extViewProcessManagers(g_sHudManager.pExtView); // wywo�anie scrollBufferProcess
+
+		viewProcessManagers(g_sHudManager.pView);
+		copProcessBlocks();
+		vPortWaitForEnd(g_sHudManager.pHudVPort);
 	}
 }
 
 void hudExpand(void) {
-	mouseSetPointer(&g_pCursorData[g_ubPointerIdx * 36], 16, 16, g_pPointerSpots[g_ubPointerIdx][0], g_pPointerSpots[g_ubPointerIdx][1]);
+	// TODO: Use mose pointer from open fire
+	// mouseSetPointer(&g_pCursorData[g_ubPointerIdx * 36], 16, 16, g_pPointerSpots[g_ubPointerIdx][0], g_pPointerSpots[g_ubPointerIdx][1]);
 	g_sHudManager.ubExpanded = 1;
 
 	hudAnimate(1, 41);
@@ -235,20 +239,21 @@ void hudSummary(void) {
 	uwPrevScore = 0;
 	ubPlace = 0;
 	for (ubPlayer = 0; ubPlayer != g_sGameConfig.ubPlayerCount; ++ubPlayer) {
-		// Je�li gorszy wynik to ni�sze miejsce - za�atwia ex aequo
+		// Jesli gorszy wynik to nizsze miejsce - zaatwia ex aequo
 		if (uwPrevScore > pPlayerScores[ubPlayer]) {
 			++ubPlace;
 		}
 		fontDrawStr(
-			g_sHudManager.pHudVPort->sVPort.RasInfo->BitMap, g_pFont,
+			g_pFont, g_sHudManager.pSimpleBuffer->pBack,
 			280, pPlayerNumbers[ubPlayer]*32+7,
-			pPlaceStrings[ubPlace], COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW
+			pPlaceStrings[ubPlace], COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW,
+			g_sHudManager.pTextBitMap
 		);
 		uwPrevScore = pPlayerScores[ubPlayer];
 	}
 	
-	freeMem(pPlayerScores, g_sGameConfig.ubPlayerCount * sizeof(UWORD));
-	freeMem(pPlayerNumbers, g_sGameConfig.ubPlayerCount);
+	memFree(pPlayerScores, g_sGameConfig.ubPlayerCount * sizeof(pPlayerScores[0]));
+	memFree(pPlayerNumbers, g_sGameConfig.ubPlayerCount);
 	
 	hudExpand();
 }

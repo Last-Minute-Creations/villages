@@ -2,7 +2,6 @@
 #include <ace/generic/screen.h>
 #include <ace/utils/extview.h>
 #include <ace/utils/palette.h>
-#include <ace/managers/viewport/tilebuffer.h>
 #include <ace/managers/viewport/simplebuffer.h>
 #include <ace/managers/system.h>
 #include <ace/managers/key.h>
@@ -18,23 +17,18 @@
 #define TILE_SIZE_SHIFT 5
 #define TILE_SIZE (1 << TILE_SIZE_SHIFT)
 
-#define HUD_VPORT_HEIGHT 32
-
 /* Globals */
 // Ekran
 tView *s_pView;
 tVPort *s_pMainVPort;
 tVPort *s_pHudVPort;
-tTileBufferManager *g_pTileBuffer; // extern
 
 static tBitMap* s_pTileSetBitMap;
 static tSimpleBufferManager* s_pHudBuffer;
 
 // Stan gry
 UBYTE g_ubTurnStep;
-tPlayer *g_pCurrPlayer;
-tUwCoordYX g_sLastTileCoord;
-UBYTE g_ubScrollSpeed = 2; // TODO: wjeba� do konfiga
+UBYTE g_ubScrollSpeed = 2; // TODO: wjebac do konfiga
 
 // Indeks kursora - obecny i poprzedni
 UBYTE g_ubPointerIdx;
@@ -115,7 +109,7 @@ void gsArcadeCreate(void) {
 
 	// kafel startowy
 	g_pTileBuffer->pTileData[TILE_BOUND_X / 2][TILE_BOUND_Y / 2] = 4 + uwRandMinMax(0, 3) * TILE_TYPES;	
-	// Pocz�tkowe przygotowanie ekranu
+	// Poczatkowe przygotowanie ekranu
 	cameraCenterAt(
 		g_pTileBuffer->pCamera,
 		(TILE_BOUND_X * TILE_SIZE) / 2,
