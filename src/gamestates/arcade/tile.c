@@ -1,11 +1,13 @@
 #include "tile.h"
 
+#include "hud.h"
+
 /* Globals */
 tTile g_pTileDefs[TILE_VARIANTS];
 tTileList g_sTileList;
 
 /* Functions */
-void tileStackCreate(void) {	
+void tileStackCreate(void) {
 	FILE *pFile = fopen("data/tiles.dat", "rb");
 
 	UWORD i;
@@ -15,13 +17,13 @@ void tileStackCreate(void) {
 		fread(g_pTileDefs[i].pLogicData, 9, 1, pFile);
 	}
 	fclose(pFile);
-	
+
 	g_sTileList.uwPos = 0;
 	g_sTileList.uwLength = TILE_VARIANTS;
-	
+
 	logWrite("tileStackCreate begin\n");
 	logPushIndent();
-	
+
 	// zlicz kafle
 	UBYTE ubTile;
 	for (ubTile = 1; ubTile != TILE_TYPES; ++ubTile) {
@@ -33,19 +35,19 @@ void tileStackCreate(void) {
 	g_sTileList.uwLength = g_sTileList.uwPos;
 	logWrite("Tile stack size: %u\n", g_sTileList.uwLength);
 	g_sTileList.pTileIdx = memAllocFast(g_sTileList.uwLength);
-	
+
 	// generuj stos bez szuflowania
 	g_sTileList.uwPos = 0;
 	for (ubTile = 1; ubTile != TILE_TYPES; ++ubTile) {
 		// logWrite("Tile: %u, count: %u\n", ubTile, g_pTileDefs[ubTile].ubCount);
 		i = g_pTileDefs[ubTile].ubCount;
 		while (i--) {
-			g_sTileList.pTileIdx[g_sTileList.uwPos] = ubTile + ubRandMinMax(0, 3) * TILE_TYPES;
+			g_sTileList.pTileIdx[g_sTileList.uwPos] = ubTile + uwRandMinMax(0, 3) * TILE_TYPES;
 			// logWrite("Stack %u: %u\n", g_sTileList.uwPos, g_sTileList.pTileIdx[g_sTileList.uwPos]);
 			++g_sTileList.uwPos;
 		}
 	}
-	
+
 	// poszufluj
 	for (g_sTileList.uwPos = 0; g_sTileList.uwPos != g_sTileList.uwLength - 1; ++g_sTileList.uwPos) {
 		// indeks dalszego kafla do zamiany
@@ -55,9 +57,9 @@ void tileStackCreate(void) {
 		g_sTileList.pTileIdx[g_sTileList.uwPos] = g_sTileList.pTileIdx[i];
 		g_sTileList.pTileIdx[i] = ubTile;
 	}
-	
+
 	g_sTileList.uwPos = 0;
-	
+
 	logPopIndent();
 	logWrite("tileStackCreate destroy\n");
 }
@@ -112,9 +114,9 @@ void tilePlace(UWORD uwTileX, UWORD uwTileY, tTile *pTile) {
 	g_pTileBuffer->pTileData[uwTileX][uwTileY] = g_sTileList.pTileIdx[g_sTileList.uwPos];
 	g_sLastTileCoord.uwX = uwTileX;
 	g_sLastTileCoord.uwY = uwTileY;
-	
+
 	// odblituj kafel
-	tileBufferDrawXY(g_pTileBuffer, uwTileX, uwTileY);
+	tileBufferDrawTile(g_pTileBuffer, uwTileX, uwTileY);
 }
 
 void tileRotate(void) {

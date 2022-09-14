@@ -1,8 +1,6 @@
 #ifndef GUARD_GAMESTATE_ARCADE_LOGIC_H
 #define GUARD_GAMESTATE_ARCADE_LOGIC_H
 
-#include <clib/exec_protos.h> // Amiga typedefs
-
 #include "config.h"
 #include "gamestates/arcade/tile.h"
 
@@ -13,6 +11,7 @@
 #define LOGIC_ROAD 3
 #define LOGIC_BONUS 4
 #define LOGIC_SWAMP 5
+#define LOGIC_COUNT 5
 
 #define LOGIC_TILE_DIRS 9
 

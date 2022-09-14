@@ -1,7 +1,11 @@
 #include "global.h"
 
+#include <ace/generic/screen.h>
+#include <ace/utils/file.h>
+
 tFont *g_pFont;
-struct BitMap *g_pCharactersBitMap;
+tBitMap *g_pCharactersBitMap;
+tTextBitMap *g_pTextBitMap;
 
 CHIP UWORD g_pCursorData[288];
 CHIP UWORD g_pPawnCursorData[36];
@@ -44,29 +48,44 @@ BYTE g_pPointerDirs[3][3] = {
 };
 
 void globalLoadCursorData(void) {
-	FILE *pFile;
-	pFile = fopen("data/hand.cur", "rb");
-	fseek(pFile, 9, SEEK_CUR); // pomini�cie nag��wka: ubCursorCount + paleta
-	fread(g_pCursorData, 576, 1, pFile);
-	fclose(pFile);
-	pFile = fopen("data/pawn.cur", "rb");
-	fseek(pFile, 9, SEEK_CUR); // pomini�cie nag��wka: ubCursorCount + paleta
-	fread(g_pPawnCursorData, 72, 1, pFile);
-	fclose(pFile);
-	mouseSetPointer(g_pCursorData, 16, 16, 0, 0);
+	const char *szCursorPath = "data/hand.cur";
+	tFile *pFile = fileOpen(szCursorPath, "rb");
+
+	if (!pFile) {
+		logWrite("ERR: File doesn't exist! '%s'", szCursorPath);
+	}
+
+	fileSeek(pFile, 9, FILE_SEEK_CURRENT); // pominiecie naglowka: ubCursorCount + paleta
+	fileRead(pFile, g_pCursorData, 576);
+	fileClose(pFile);
+
+	const char *szPawnPath = "data/pawn.cur";
+	pFile = fileOpen(szPawnPath, "rb");
+
+	if (!pFile) {
+		logWrite("ERR: File doesn't exist! '%s'", szPawnPath);
+	}
+
+	fileSeek(pFile, 9, FILE_SEEK_CURRENT); // pominiecie naglowka: ubCursorCount + paleta
+	fileRead(pFile, g_pPawnCursorData, 72);
+	fileClose(pFile);
+	// TODO:
+	// mouseSetPointer(g_pCursorData, 16, 16, 0, 0);
 }
 
 void globalCreate(void) {
-	logWrite("globalCreate begin\n");
-	logPushIndent();
+	logBlockBegin("globalCreate()");
+
 	globalLoadCursorData();
 	g_pFont = fontCreate("data/fonts/arpegius-15.fnt");
+	g_pTextBitMap = fontCreateTextBitMap(SCREEN_PAL_WIDTH, g_pFont->uwHeight);
 	g_pCharactersBitMap = bitmapCreateFromFile("data/bitmaps/goblins.bm", FALSE);
-	logPopIndent();
-	logWrite("globalCreate end\n");
+
+	logBlockEnd("globalCreate()");
 }
 
 void globalDestroy(void) {
 	fontDestroy(g_pFont);
+	fontDestroyTextBitMap(g_pTextBitMap);
 	bitmapDestroy(g_pCharactersBitMap);
 }

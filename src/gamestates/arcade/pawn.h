@@ -1,7 +1,6 @@
 #ifndef GUARD_GAMESTATE_ARCADE_PAWN_H
 #define GUARD_GAMESTATE_ARCADE_PAWN_H
 
-
 #include <ace/utils/bitmap.h>
 #include <ace/managers/blit.h>
 

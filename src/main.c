@@ -7,6 +7,7 @@
 #include "global.h"
 #include "gamestates/menu/menu.h"
 
+tStateManager *g_pGameStateManager;
 
 void genericCreate(void) {
 	randInit(0);

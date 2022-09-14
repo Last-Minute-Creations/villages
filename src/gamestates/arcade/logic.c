@@ -1,5 +1,7 @@
 #include "logic.h"
 
+#include "pawn.h"
+
 /* Globals */
 tLogicList g_sLogicList;
 BYTE g_pLogicTileDirs[LOGIC_TILE_DIRS][2] = {
@@ -10,13 +12,13 @@ BYTE g_pLogicTileDirs[LOGIC_TILE_DIRS][2] = {
 
 /* Functions */
 void logicListCreate(void) {
-	g_sLogicList.pItems = allocFastFirstClear(sizeof(tLogicListItem) * g_sTileList.uwLength * 5);
+	g_sLogicList.pItems = memAllocFastClear(sizeof(*g_sLogicList.pItems) * g_sTileList.uwLength * LOGIC_COUNT);
 	g_sLogicList.uwPos = 0;
 	g_sLogicList.uwLength = g_sTileList.uwLength;
 }
 
 void logicListDestroy(void) {
-	freeMem(g_sLogicList.pItems, sizeof(tLogicListItem) * g_sLogicList.uwLength * 5);
+	memFree(g_sLogicList.pItems, sizeof(*g_sLogicList.pItems) * g_sLogicList.uwLength * LOGIC_COUNT);
 }
 
 void logicCountPoints(void) {
@@ -24,8 +26,8 @@ void logicCountPoints(void) {
 
 	while (ubTileLogicDataIdx--) {
 		/* TODO
-			pVisitedLogicIdx = tablica, która pamiêta logicDataIdx lastTile'a
-			by nie triggerowaæ na nich crawlera
+			pVisitedLogicIdx = tablica, ktora pamieta logicDataIdx lastTile'a
+			by nie triggerowac na nich crawlera
 			jest w logicList
 		*/
 		switch (g_pTileDefs[g_pTileBuffer->pTileData[g_sLastTileCoord.uwX][g_sLastTileCoord.uwY]].pLogicData[ubTileLogicDataIdx]) {
@@ -70,7 +72,7 @@ void logicSumWalkerResults(void) {
 		while (uwItem--) {
 			tPawn *pPawn = g_sGameConfig.pPawnFirst;
 			while (pPawn) {
-				if (coordEqual(pPawn->sTileCoord, g_sLogicList.pItems[uwItem].sTileCoord) && (pPawn->ubLogicDataIdx == g_sLogicList.pItems[uwItem].ubLogicDataIdx)) {
+				if ((pPawn->sTileCoord.ulYX == g_sLogicList.pItems[uwItem].sTileCoord.ulYX) && (pPawn->ubLogicDataIdx == g_sLogicList.pItems[uwItem].ubLogicDataIdx)) {
 					++pPlayerPawnsCount[pPawn->pPlayer->ubIdx];
 
 					pawnRemove(pPawn);
@@ -88,7 +90,7 @@ void logicSumWalkerResults(void) {
 
 		uwItem = g_sLogicList.uwPos;
 		while (uwItem--) {
-			tileBufferDrawXY(g_pTileBuffer, g_sLogicList.pItems[uwItem].sTileCoord.uwX, g_sLogicList.pItems[uwItem].sTileCoord.uwY);
+			tileBufferDrawTile(g_pTileBuffer, g_sLogicList.pItems[uwItem].sTileCoord.uwX, g_sLogicList.pItems[uwItem].sTileCoord.uwY);
 		}
 	}
 	else {
@@ -150,15 +152,11 @@ UBYTE logicIsStructureOccupied(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataId
 	}
 
 	if (g_sLogicList.uwPos) {
-		UBYTE ubPawn;
-		UBYTE ubPlayer;
-
-
 		UWORD uwItem = g_sLogicList.uwPos;
 		while (uwItem--) {
 			tPawn *pPawn = g_sGameConfig.pPawnFirst;
 			while (pPawn) {
-				if (coordEqual(pPawn->sTileCoord, g_sLogicList.pItems[uwItem].sTileCoord) && (pPawn->ubLogicDataIdx == g_sLogicList.pItems[uwItem].ubLogicDataIdx)) {
+				if ((pPawn->sTileCoord.ulYX == g_sLogicList.pItems[uwItem].sTileCoord.ulYX) && (pPawn->ubLogicDataIdx == g_sLogicList.pItems[uwItem].ubLogicDataIdx)) {
 					return 1;
 				}
 
@@ -171,14 +169,14 @@ UBYTE logicIsStructureOccupied(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataId
 }
 
 void logicListMakeDistinct(void) {
-	UWORD uwDistinctPos = 0; 
+	UWORD uwDistinctPos = 0;
 
 	UWORD uwItem;
 	for (uwItem = 0; uwItem < g_sLogicList.uwPos; ++uwItem) {
 		UBYTE ubFound = 0;
 		UWORD uwDistinctItem = uwDistinctPos;
 		while (uwDistinctItem--) {
-			if (coordEqual(g_sLogicList.pItems[uwItem].sTileCoord, g_sLogicList.pItems[uwDistinctItem].sTileCoord)) {
+			if (g_sLogicList.pItems[uwItem].sTileCoord.ulYX == g_sLogicList.pItems[uwDistinctItem].sTileCoord.ulYX) {
 				ubFound = 1;
 				break;
 			}
@@ -230,7 +228,7 @@ void logicWalkRoad(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx) {
 				else {
 					g_sLogicList.ubClosed = 0;
 				}
-				
+
 				ubTileIdx = g_pTileBuffer->pTileData[g_sLogicList.pItems[uwItem].sTileCoord.uwX][g_sLogicList.pItems[uwItem].sTileCoord.uwY];
 				if (g_pTileDefs[ubTileIdx].pLogicData[4] == LOGIC_ROAD) {
 					logicWalkMakeStep(g_sLogicList.pItems[uwItem].sTileCoord.uwX, g_sLogicList.pItems[uwItem].sTileCoord.uwY, 4);
@@ -243,7 +241,7 @@ void logicWalkRoad(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx) {
 				else {
 					g_sLogicList.ubClosed = 0;
 				}
-				
+
 				ubTileIdx = g_pTileBuffer->pTileData[g_sLogicList.pItems[uwItem].sTileCoord.uwX][g_sLogicList.pItems[uwItem].sTileCoord.uwY];
 				if (g_pTileDefs[ubTileIdx].pLogicData[4] == LOGIC_ROAD) {
 					logicWalkMakeStep(g_sLogicList.pItems[uwItem].sTileCoord.uwX, g_sLogicList.pItems[uwItem].sTileCoord.uwY, 4);
@@ -276,7 +274,7 @@ void logicWalkRoad(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx) {
 				else {
 					g_sLogicList.ubClosed = 0;
 				}
-				
+
 				ubTileIdx = g_pTileBuffer->pTileData[g_sLogicList.pItems[uwItem].sTileCoord.uwX][g_sLogicList.pItems[uwItem].sTileCoord.uwY];
 				if (g_pTileDefs[ubTileIdx].pLogicData[4] == LOGIC_ROAD) {
 					logicWalkMakeStep(g_sLogicList.pItems[uwItem].sTileCoord.uwX, g_sLogicList.pItems[uwItem].sTileCoord.uwY, 4);
@@ -290,7 +288,7 @@ void logicWalkRoad(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx) {
 				else {
 					g_sLogicList.ubClosed = 0;
 				}
-				
+
 				ubTileIdx = g_pTileBuffer->pTileData[g_sLogicList.pItems[uwItem].sTileCoord.uwX][g_sLogicList.pItems[uwItem].sTileCoord.uwY];
 				if (g_pTileDefs[ubTileIdx].pLogicData[4] == LOGIC_ROAD) {
 					logicWalkMakeStep(g_sLogicList.pItems[uwItem].sTileCoord.uwX, g_sLogicList.pItems[uwItem].sTileCoord.uwY, 4);
@@ -319,7 +317,7 @@ void logicWalkVillage(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx) {
 				else {
 					g_sLogicList.ubClosed = 0;
 				}
-				
+
 				ubTileIdx = g_pTileBuffer->pTileData[g_sLogicList.pItems[uwItem].sTileCoord.uwX][g_sLogicList.pItems[uwItem].sTileCoord.uwY];
 
 				if (((g_pTileDefs[ubTileIdx].pLogicData[0] == LOGIC_VILLAGE) || (g_pTileDefs[ubTileIdx].pLogicData[0] == LOGIC_BONUS)) && ((g_pTileDefs[ubTileIdx].pLogicData[3] == LOGIC_VILLAGE) || (g_pTileDefs[ubTileIdx].pLogicData[3] == LOGIC_BONUS))) {
@@ -342,7 +340,7 @@ void logicWalkVillage(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx) {
 				else {
 					g_sLogicList.ubClosed = 0;
 				}
-				
+
 				ubTileIdx = g_pTileBuffer->pTileData[g_sLogicList.pItems[uwItem].sTileCoord.uwX][g_sLogicList.pItems[uwItem].sTileCoord.uwY];
 
 				if (((g_pTileDefs[ubTileIdx].pLogicData[0] == LOGIC_VILLAGE) || (g_pTileDefs[ubTileIdx].pLogicData[0] == LOGIC_BONUS)) && ((g_pTileDefs[ubTileIdx].pLogicData[1] == LOGIC_VILLAGE) || (g_pTileDefs[ubTileIdx].pLogicData[1] == LOGIC_BONUS))) {
@@ -384,7 +382,7 @@ void logicWalkVillage(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx) {
 				else {
 					g_sLogicList.ubClosed = 0;
 				}
-				
+
 				ubTileIdx = g_pTileBuffer->pTileData[g_sLogicList.pItems[uwItem].sTileCoord.uwX][g_sLogicList.pItems[uwItem].sTileCoord.uwY];
 
 				if (((g_pTileDefs[ubTileIdx].pLogicData[2] == LOGIC_VILLAGE) || (g_pTileDefs[ubTileIdx].pLogicData[2] == LOGIC_BONUS)) && ((g_pTileDefs[ubTileIdx].pLogicData[1] == LOGIC_VILLAGE) || (g_pTileDefs[ubTileIdx].pLogicData[1] == LOGIC_BONUS))) {
@@ -407,7 +405,7 @@ void logicWalkVillage(UWORD uwTileX, UWORD uwTileY, UBYTE ubLogicDataIdx) {
 				else {
 					g_sLogicList.ubClosed = 0;
 				}
-				
+
 				ubTileIdx = g_pTileBuffer->pTileData[g_sLogicList.pItems[uwItem].sTileCoord.uwX][g_sLogicList.pItems[uwItem].sTileCoord.uwY];
 
 				if (((g_pTileDefs[ubTileIdx].pLogicData[6] == LOGIC_VILLAGE) || (g_pTileDefs[ubTileIdx].pLogicData[6] == LOGIC_BONUS)) && ((g_pTileDefs[ubTileIdx].pLogicData[3] == LOGIC_VILLAGE) || (g_pTileDefs[ubTileIdx].pLogicData[3] == LOGIC_BONUS))) {

@@ -1,8 +1,6 @@
 #ifndef GUARD_GAMESTATE_ARCADE_TILE_H
 #define GUARD_GAMESTATE_ARCADE_TILE_H
 
-#include "config.h"
-
 #include <ace/managers/memory.h>
 #include <ace/managers/log.h>
 #include <ace/managers/rand.h>

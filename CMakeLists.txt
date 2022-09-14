@@ -46,3 +46,16 @@ file(
 	${DATA_DIR}
 	${GEN_DIR}/tileset
 )
+
+file(
+	GLOB
+	RES_FILES
+	${RES_DIR}/*
+)
+
+file(
+	COPY
+	${RES_FILES}
+	DESTINATION
+	${DATA_DIR}
+)

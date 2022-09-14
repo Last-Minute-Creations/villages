@@ -44,7 +44,8 @@ typedef struct {
 } tGameConfig;
 
 extern tFont *g_pFont;
-extern struct BitMap *g_pCharactersBitMap;
+extern tBitMap *g_pCharactersBitMap;
+extern tTextBitMap *g_pTextBitMap;
 
 extern CHIP UWORD g_pCursorData[288];
 extern CHIP UWORD g_pPawnCursorData[36];

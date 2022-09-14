@@ -1,8 +1,11 @@
 #include "pawn.h"
-#include <ace/generic/screen.h>
-#include <ace/types.h>
-#include "arcade.h"
 
+#include <ace/generic/screen.h>
+#include <ace/managers/log.h>
+#include <ace/types.h>
+#include <ace/utils/file.h>
+
+#include "arcade.h"
 
 /* Globals */
 struct BitMap *g_pPawnsBitMap;
@@ -12,11 +15,17 @@ UWORD *s_pPawnMask;
 void pawnCreate(void) {
 	// wczytanie pionkow
 	g_pPawnsBitMap = bitmapCreateFromFile("data/bitmaps/pawns.bm", FALSE);
-	s_pPawnMask = memAllocChip(80 * sizeof(UWORD));
+	s_pPawnMask = memAllocChip(80 * sizeof(*s_pPawnMask));
 
-	FILE *pFile = fopen("data/pawns.msk", "rb");
-	fread(s_pPawnMask, 80, sizeof(UWORD), pFile);
-	fclose(pFile);
+	const char *szPawnsMaskPath = "data/pawns.msk";
+	tFile *pFile = fileOpen(szPawnsMaskPath, "rb");
+
+	if (!pFile) {
+		logWrite("ERR: File doesn't exist! '%s'", szPawnsMaskPath);
+	}
+
+	fileRead(pFile, s_pPawnMask, 80 * sizeof(*s_pPawnMask));
+	fileClose(pFile);
 
 	// init listy pionow
 	g_sGameConfig.ubPawnCount = 0;

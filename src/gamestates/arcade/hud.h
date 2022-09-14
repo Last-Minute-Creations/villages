@@ -32,7 +32,6 @@ typedef struct {
 	tSimpleBufferManager *pSimpleBuffer;
 	tCameraManager *pCamera;
 	tHudPlayerCache *pPlayerCache;
-	tTextBitMap *pTextBitMap;
 } tHudManager;
 
 /* Globals */

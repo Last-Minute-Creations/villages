@@ -6,11 +6,14 @@
 #include <ace/managers/system.h>
 #include <ace/managers/key.h>
 #include <ace/managers/state.h>
+
 #include "global.h"
 #include "player.h"
 #include "logic.h"
 #include "hud.h"
 #include "pawn.h"
+
+#include "gamestates/menu/menu.h"
 
 #define TILE_BOUND_X 100
 #define TILE_BOUND_Y 100
@@ -18,10 +21,15 @@
 #define TILE_SIZE (1 << TILE_SIZE_SHIFT)
 
 /* Globals */
+tPlayer *g_pCurrPlayer;
+tTileBufferManager *g_pTileBuffer;
+tUwCoordYX g_sLastTileCoord;
+
+/* Statics */
 // Ekran
-tView *s_pView;
-tVPort *s_pMainVPort;
-tVPort *s_pHudVPort;
+static tView *s_pView;
+static tVPort *s_pMainVPort;
+static tVPort *s_pHudVPort;
 
 static tBitMap* s_pTileSetBitMap;
 static tSimpleBufferManager* s_pHudBuffer;
@@ -34,7 +42,7 @@ UBYTE g_ubScrollSpeed = 2; // TODO: wjebac do konfiga
 UBYTE g_ubPointerIdx;
 UBYTE g_ubPrevPointerIdx;
 
-// Pami�� dla sprawdzania na hoverze
+// Pamiec dla sprawdzania na hoverze
 UBYTE g_pTileIsPlacable[9];
 UBYTE g_ubPrevLogicDataIdx;
 
@@ -47,8 +55,8 @@ void setPointerColors(UBYTE *pColorIdx) {
 }
 
 void gsArcadeCreate(void) {
-	logBlockBegin("gsArcadeCreate begin\n");
-	
+	logBlockBegin("gsArcadeCreate()");
+
 	s_pView = viewCreate(
 		NULL,
 		TAG_VIEW_GLOBAL_CLUT, 1,
@@ -72,6 +80,7 @@ void gsArcadeCreate(void) {
 		TAG_TILEBUFFER_TILE_SHIFT, TILE_SIZE_SHIFT,
 		TAG_TILEBUFFER_TILESET, s_pTileSetBitMap,
 		TAG_TILEBUFFER_CALLBACK_TILE_DRAW, pawnRedrawCallback,
+		TAG_TILEBUFFER_REDRAW_QUEUE_LENGTH, 100,
 		TAG_DONE
 	);
 
@@ -94,7 +103,7 @@ void gsArcadeCreate(void) {
 	);
 	// palety
 	paletteLoad("data/palettes/selur_v1.plt", s_pMainVPort->pPalette, 32);
-	
+
 	// Gracze, pionki, logika
 	pawnCreate();
 	playerListCreate();
@@ -108,7 +117,7 @@ void gsArcadeCreate(void) {
 	g_ubTurnStep = TURN_TILE;
 
 	// kafel startowy
-	g_pTileBuffer->pTileData[TILE_BOUND_X / 2][TILE_BOUND_Y / 2] = 4 + uwRandMinMax(0, 3) * TILE_TYPES;	
+	g_pTileBuffer->pTileData[TILE_BOUND_X / 2][TILE_BOUND_Y / 2] = 4 + uwRandMinMax(0, 3) * TILE_TYPES;
 	// Poczatkowe przygotowanie ekranu
 	cameraCenterAt(
 		g_pTileBuffer->pCamera,
@@ -118,8 +127,8 @@ void gsArcadeCreate(void) {
 	tileBufferRedrawAll(g_pTileBuffer);
 
 	viewLoad(s_pView);
-	
-	logBlockEnd("gsArcadeCreate end\n");
+
+	logBlockEnd("gsArcadeCreate()");
 
 	systemUnuse();
 }
@@ -127,8 +136,8 @@ void gsArcadeCreate(void) {
 void gsArcadeDestroy(void) {
 	systemUse();
 
-	logBlockBegin("gsArcadeDestroy begin\n");
-	
+	logBlockBegin("gsArcadeDestroy()");
+
 	viewLoad(0);
 
 	viewDestroy(s_pView);
@@ -139,8 +148,8 @@ void gsArcadeDestroy(void) {
 	hudDestroy();
 	logicListDestroy();
 	tileStackDestroy();
-	
-	logBlockEnd("gsArcadeDestroy end\n");
+
+	logBlockEnd("gsArcadeDestroy()");
 }
 
 void gsArcadeLoopSetup(void) {
@@ -166,11 +175,11 @@ void endTurn(void) {
 		else {
 			g_pCurrPlayer = g_sGameConfig.pPlayerFirst;
 		}
-		
+
 		// kafel do przodu
 		++g_sTileList.uwPos;
 		g_ubTurnStep = TURN_TILE;
-		
+
 		// odrysuj HUD kolejnego gracza
 		setPointerColors(g_pPlayerColors[g_pCurrPlayer->ubIdx]);
 		hudRedrawAll();
@@ -210,14 +219,14 @@ static void arcadeProcessScroll(UWORD uwMouseX, UWORD uwMouseY){
 void gsArcadeLoop(void) {
 	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
 	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
-	
+
 	if (keyUse(KEY_ESCAPE)) {
 		hudSummary();
 		// FIXME
 		// gameChangeLoop(gsArcadeResultsLoop);
 		return;
 	}
-	
+
 	if (g_sHudManager.ubExpanded) {
 		if (keyUse(KEY_SPACE) || mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
 			hudMinimize();
@@ -272,7 +281,7 @@ void gsArcadeLoop(void) {
 		case TURN_PAWN: {
 			UWORD uwTileX = (g_pTileBuffer->pCamera->uPos.uwX + uwMouseX) / g_pTileBuffer->ubTileSize;
 			UWORD uwTileY = (g_pTileBuffer->pCamera->uPos.uwY + uwMouseY) / g_pTileBuffer->ubTileSize;
-			
+
 			if ((uwTileX == g_sLastTileCoord.uwX) && (uwTileY == g_sLastTileCoord.uwY)) {
 				UBYTE ubTileChunkX = (((g_pTileBuffer->pCamera->uPos.uwX + uwMouseX) % g_pTileBuffer->ubTileSize) + (g_pTileBuffer->ubTileSize >> 2)) / (g_pTileBuffer->ubTileSize >> 1);
 				UBYTE ubTileChunkY = (((g_pTileBuffer->pCamera->uPos.uwY + uwMouseY) % g_pTileBuffer->ubTileSize) + (g_pTileBuffer->ubTileSize >> 2)) / (g_pTileBuffer->ubTileSize >> 1);
@@ -303,7 +312,7 @@ void gsArcadeLoop(void) {
 				// mouseSetPointer(&g_pCursorData[g_ubPointerIdx * 36], 16, 16, g_pPointerSpots[g_ubPointerIdx][0], g_pPointerSpots[g_ubPointerIdx][1]);
 				g_ubPrevLogicDataIdx = 0xff;
 			}
-			
+
 			if (keyUse(KEY_RETURN)) {
 				endTurn();
 			}
@@ -311,7 +320,7 @@ void gsArcadeLoop(void) {
 	}
 
 	arcadeProcessScroll(uwMouseX, uwMouseY);
-	
+
 	// odrysuj kafle na marginesach lub caly ekran jesli offset za duzy
 	viewProcessManagers(s_pView);
 	vPortWaitForEnd(s_pHudVPort);
@@ -319,8 +328,7 @@ void gsArcadeLoop(void) {
 
 void gsArcadeResultsLoop(void) {
 	if (mouseUse(MOUSE_PORT_1, MOUSE_LMB) || keyUse(KEY_ESCAPE) || keyUse(KEY_SPACE) || keyUse(KEY_RETURN)) {
-		// FIXME
-		// stateChange(gsMenuCreate, gsMenuLobbySetup, gsMenuDestroy);
+		stateChange(g_pGameStateManager, &g_sStateMenu);
 	}
 }
 

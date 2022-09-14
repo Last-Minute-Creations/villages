@@ -17,17 +17,16 @@ void hudCreate(tView *pView) {
 	g_sHudManager.pMainVPort = pView->pFirstVPort;
 	g_sHudManager.pHudVPort = g_sHudManager.pMainVPort->pNext;
 	g_sHudManager.ubExpanded = 0;
-	g_sHudManager.pTextBitMap = fontCreateTextBitMap(g_sHudManager.pHudVPort->uwWidth, g_pFont->uwHeight);
 	g_sHudManager.pCamera = (tCameraManager *) vPortGetManager(g_sHudManager.pHudVPort, VPM_CAMERA);
 	g_sHudManager.pSimpleBuffer = (tSimpleBufferManager *) vPortGetManager(g_sHudManager.pHudVPort, VPM_SCROLL);
-	
+
 	g_pPawnsLarge = bitmapCreateFromFile("data/bitmaps/pawnsLarge.bm", FALSE);
-	
+
 	g_sHudManager.pPlayerCache = memAllocFast(sizeof(g_sHudManager.pPlayerCache[0]) * g_sGameConfig.ubPlayerCount);
 	for (i = 0; i < g_sGameConfig.ubPlayerCount; ++i) {
 		g_sHudManager.pPlayerCache[i].ubBgDrawn = FALSE;
 	}
-	
+
 	hudRedrawAll();
 	// TODO: zastapic kodem menadgera skrolingu
 	cameraSetCoord(g_sHudManager.pCamera , 0, 32 * g_pCurrPlayer->ubIdx);
@@ -36,7 +35,6 @@ void hudCreate(tView *pView) {
 void hudDestroy(void) {
 	memFree(g_sHudManager.pPlayerCache, sizeof(g_sHudManager.pPlayerCache[0]) * g_sGameConfig.ubPlayerCount);
 	bitmapDestroy(g_pPawnsLarge);
-	fontDestroyTextBitMap(g_sHudManager.pTextBitMap);
 }
 
 void hudRedrawAll(void) {
@@ -54,7 +52,7 @@ void hudRedrawPlayer(const tPlayer *pPlayer) {
 	UBYTE ubBgFresh = 0;
 	tBitMap *pHudBitMap = g_sHudManager.pSimpleBuffer->pBack;
 	UBYTE ubPlayerOffs = pPlayer->ubIdx * 32;
-	
+
 	if (!g_sHudManager.pPlayerCache[pPlayer->ubIdx].ubBgDrawn) {
 		// czyszczenie tla
 		blitRect(
@@ -76,7 +74,7 @@ void hudRedrawPlayer(const tPlayer *pPlayer) {
 		g_sHudManager.pPlayerCache[pPlayer->ubIdx].ubPrevPawns = 0xFF;
 		g_sHudManager.pPlayerCache[pPlayer->ubIdx].wPrevScore = -1;
 	}
-	
+
 	if (g_sHudManager.pPlayerCache[pPlayer->ubIdx].wPrevScore != pPlayer->uwScore) {
 		// odrysowanie tla score'a
 		if (!ubBgFresh) {
@@ -89,10 +87,10 @@ void hudRedrawPlayer(const tPlayer *pPlayer) {
 		}
 		// odrysowanie licznika score'a
 		sprintf(szBfr, "Score: %hu", pPlayer->uwScore);
-		fontDrawStr(g_pFont, pHudBitMap, 35, ubPlayerOffs + 7, szBfr, COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW, g_sHudManager.pTextBitMap);
+		fontDrawStr(g_pFont, pHudBitMap, 35, ubPlayerOffs + 7, szBfr, COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
 		g_sHudManager.pPlayerCache[pPlayer->ubIdx].wPrevScore = pPlayer->uwScore;
 	}
-	
+
 	// odrysowanie tla licznika pionow
 	if (g_sHudManager.pPlayerCache[pPlayer->ubIdx].ubPrevPawns != pPlayer->ubPawnsLeft) {
 		if (!ubBgFresh) {
@@ -105,10 +103,10 @@ void hudRedrawPlayer(const tPlayer *pPlayer) {
 		}
 		// odrysowanie licznika pionow
 		sprintf(szBfr, "Goblins: %hhu", pPlayer->ubPawnsLeft);
-		fontDrawStr(g_pFont, pHudBitMap, 165, ubPlayerOffs + 7, szBfr, COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW, g_sHudManager.pTextBitMap);
+		fontDrawStr(g_pFont, pHudBitMap, 165, ubPlayerOffs + 7, szBfr, COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
 		g_sHudManager.pPlayerCache[pPlayer->ubIdx].ubPrevPawns = pPlayer->ubPawnsLeft;
 	}
-	
+
 	// odrysowanie kafla
 	if (pPlayer == g_pCurrPlayer) {
 		if (g_ubTurnStep == TURN_PAWN) {
@@ -144,7 +142,7 @@ void hudShowPlayer(const tPlayer *pPlayer) {
 	UBYTE ubStart = g_sHudManager.pCamera->uPos.uwY;
 	UBYTE ubEnd = 32 * pPlayer->ubIdx;
 	UBYTE i;
-	
+
 	for (i = 0; i != 20; ++i) {
 		cameraSetCoord(g_sHudManager.pCamera, g_sHudManager.pCamera->uPos.uwX, ubStart + ((ubEnd - ubStart) * steps[i]) / 32);
 		vPortProcessManagers(g_sHudManager.pHudVPort);
@@ -201,9 +199,9 @@ void hudSummary(void) {
 	tPlayer *pTmpCurr;
 
 	// numery graczy i score'y do sortowania
-	pPlayerScores = allocFastFirst(g_sGameConfig.ubPlayerCount * sizeof(UWORD));
-	pPlayerNumbers = allocFastFirst(g_sGameConfig.ubPlayerCount);
-	// wype�nij
+	pPlayerScores = memAllocFast(g_sGameConfig.ubPlayerCount * sizeof(pPlayerScores[0]));
+	pPlayerNumbers = memAllocFast(g_sGameConfig.ubPlayerCount * sizeof(pPlayerNumbers[0]));
+	// wypelnij
 	pTmpCurr = g_sGameConfig.pPlayerFirst;
 	for (ubPlayer = 0; ubPlayer != g_sGameConfig.ubPlayerCount; ++ubPlayer) {
 		pPlayerScores[ubPlayer] = pTmpCurr->uwScore;
@@ -217,7 +215,7 @@ void hudSummary(void) {
 		for (ubPlayer = g_sGameConfig.ubPlayerCount; --ubPlayer;) {
 			if (pPlayerScores[ubPlayer] > pPlayerScores[ubPlayer-1]) {
 				ubDone = 0;
-				// swap punkt�w
+				// swap punktow
 				uwTmp = pPlayerScores[ubPlayer-1];
 				pPlayerScores[ubPlayer-1] = pPlayerScores[ubPlayer];
 				pPlayerScores[ubPlayer] = uwTmp;
@@ -228,14 +226,14 @@ void hudSummary(void) {
 			}
 		}
 	} while (!ubDone);
-	
-	// Odrysuj ca�y HUD bez zaznaczania aktywnego gracza
+
+	// Odrysuj caly HUD bez zaznaczania aktywnego gracza
 	pTmpCurr = g_pCurrPlayer;
-	g_pCurrPlayer = 0; // �eby nie odrysowa� nigdzie kafla
+	g_pCurrPlayer = 0; // zeby nie odrysowac nigdzie kafla
 	hudRedrawAll();
 	g_pCurrPlayer = pTmpCurr;
-	
-	// Wypisz numery zaj�tych miejsc
+
+	// Wypisz numery zajetych miejsc
 	uwPrevScore = 0;
 	ubPlace = 0;
 	for (ubPlayer = 0; ubPlayer != g_sGameConfig.ubPlayerCount; ++ubPlayer) {
@@ -247,13 +245,13 @@ void hudSummary(void) {
 			g_pFont, g_sHudManager.pSimpleBuffer->pBack,
 			280, pPlayerNumbers[ubPlayer]*32+7,
 			pPlaceStrings[ubPlace], COLOR_DRKGREEN, FONT_COOKIE | FONT_SHADOW,
-			g_sHudManager.pTextBitMap
+			g_pTextBitMap
 		);
 		uwPrevScore = pPlayerScores[ubPlayer];
 	}
-	
+
 	memFree(pPlayerScores, g_sGameConfig.ubPlayerCount * sizeof(pPlayerScores[0]));
-	memFree(pPlayerNumbers, g_sGameConfig.ubPlayerCount);
-	
+	memFree(pPlayerNumbers, g_sGameConfig.ubPlayerCount * sizeof(pPlayerNumbers[0]));
+
 	hudExpand();
 }

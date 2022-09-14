@@ -2,8 +2,6 @@
 #define GUARD_CONFIG_H
 
 /* Project Compilation flags */
-#define GAME_MEMLOG 0
-#define GAME_DEBUG 0
 #define GAME_BPP 5
 
 // Kolory palety

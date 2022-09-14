@@ -1,5 +1,10 @@
 #include "player.h"
 
+#include "config.h"
+#include "global.h"
+
+#include <ace/managers/memory.h>
+
 void playerListCreate(void) {
 	UBYTE ubPlayer = g_sGameConfig.ubPlayerCount;
 	tPlayer *pPlayer;
@@ -8,11 +13,11 @@ void playerListCreate(void) {
 	// czyli ostatnio dodany jest nastepny na liscie
 	while (ubPlayer--) {
 		if (g_sGameConfig.pPlayersSelected[ubPlayer]) {
-			pPlayer = allocFastFirst(sizeof(tPlayer));
+			pPlayer = memAllocFast(sizeof(*pPlayer));
 			pPlayer->ubIdx = ubPlayer;
 			pPlayer->uwScore = 0;
 			pPlayer->ubPawnsLeft = g_sGameConfig.ubPawnsPerPlayer;
-			
+
 			pPlayer->pNext = pNext;
 			pNext = pPlayer;
 		}
@@ -26,7 +31,7 @@ void playerListDestroy(void) {
 	while (pPlayer) {
 		pNext = pPlayer->pNext;
 
-		freeMem(pPlayer, sizeof(tPlayer));
+		memFree(pPlayer, sizeof(*pPlayer));
 
 		pPlayer = pNext;
 	}
