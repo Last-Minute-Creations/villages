@@ -8,6 +8,7 @@
 #include <ace/managers/state.h>
 
 #include "global.h"
+#include "cursor.h"
 #include "player.h"
 #include "logic.h"
 #include "hud.h"
@@ -104,6 +105,8 @@ void gsArcadeCreate(void) {
 	// palety
 	paletteLoad("data/palettes/selur_v1.plt", s_pMainVPort->pPalette, 32);
 
+	cursorCreate(s_pView, 0, "data/hand.bm", 0);
+
 	// Gracze, pionki, logika
 	pawnCreate();
 	playerListCreate();
@@ -126,6 +129,8 @@ void gsArcadeCreate(void) {
 	);
 	tileBufferRedrawAll(g_pTileBuffer);
 
+	copBlockDisableSprites(s_pView->pCopList, 0xFE);
+	systemSetDmaBit(DMAB_SPRITE, TRUE);
 	viewLoad(s_pView);
 
 	logBlockEnd("gsArcadeCreate()");
@@ -150,11 +155,6 @@ void gsArcadeDestroy(void) {
 	tileStackDestroy();
 
 	logBlockEnd("gsArcadeDestroy()");
-}
-
-void gsArcadeLoopSetup(void) {
-	// FIXME: as
-	// gameChangeLoop(gsArcadeLoop);
 }
 
 void endTurn(void) {
@@ -217,6 +217,8 @@ static void arcadeProcessScroll(UWORD uwMouseX, UWORD uwMouseY){
 }
 
 void gsArcadeLoop(void) {
+	cursorUpdate();
+
 	UWORD uwMouseX = mouseGetX(MOUSE_PORT_1);
 	UWORD uwMouseY = mouseGetY(MOUSE_PORT_1);
 
@@ -323,6 +325,7 @@ void gsArcadeLoop(void) {
 
 	// odrysuj kafle na marginesach lub caly ekran jesli offset za duzy
 	viewProcessManagers(s_pView);
+	copProcessBlocks();
 	vPortWaitForEnd(s_pHudVPort);
 }
 
