@@ -16,6 +16,7 @@
 
 #include "config.h"
 #include "global.h"
+#include "cursor.h"
 
 #include "gamestates/arcade/arcade.h"
 
@@ -51,6 +52,8 @@ void gsMenuCreate(void) {
 
 	paletteLoad("data/palettes/selur_v1.plt", s_pMenuVPort->pPalette, 32);
 
+	cursorCreate(s_pMenuView, 0, "data/hand.bm", 0);
+
 	s_pGrassBitMap = bitmapCreateFromFile("data/bitmaps/grass.bm", FALSE);
 
 	// Splash
@@ -60,6 +63,8 @@ void gsMenuCreate(void) {
 	fontDrawStr(g_pFont, s_pSplashBitMap, SCREEN_PAL_WIDTH >> 1, 215, "All rights reserved 2014", COLOR_DRKGREEN, FONT_CENTER | FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
 	fontDrawStr(g_pFont, s_pSplashBitMap, SCREEN_PAL_WIDTH >> 1, 230, "KaiN, Proxy, Selur, JnR", COLOR_DRKGREEN, FONT_CENTER | FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
 
+	copBlockDisableSprites(s_pMenuView->pCopList, 0xFE);
+	systemSetDmaBit(DMAB_SPRITE, TRUE);
 	viewLoad(s_pMenuView);
 
 	logBlockEnd("gsMenuCreate()");
@@ -85,6 +90,8 @@ void gsMenuSplashSetup(void) {
 }
 
 void gsMenuSplashLoop(void) {
+	cursorUpdate();
+
 	if (keyUse(KEY_ESCAPE)) {
 		statePopAll(g_pGameStateManager);
 		return;
@@ -96,6 +103,10 @@ void gsMenuSplashLoop(void) {
 		stateChange(g_pGameStateManager, &s_sStateMenuLobby);
 		// extViewFadeIn(s_pMenuView);
 	}
+
+	viewProcessManagers(s_pMenuView);
+	copProcessBlocks();
+	vPortWaitForEnd(s_pMenuVPort);
 }
 
 void gsMenuLobbySetup(void) {
@@ -132,6 +143,8 @@ void gsMenuLobbySetup(void) {
 }
 
 void gsMenuLobbyLoop(void) {
+	cursorUpdate();
+
 	if (keyUse(KEY_ESCAPE)) {
 		// TODO: Use paletteDim
 		// extViewFadeOut(s_pMenuView);
@@ -208,6 +221,10 @@ void gsMenuLobbyLoop(void) {
 			fontDrawStr(g_pFont, s_pMenuBuffer->pBack, SCREEN_PAL_WIDTH - 115, 140, szPawnCount, COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
 		}
 	}
+
+	viewProcessManagers(s_pMenuView);
+	copProcessBlocks();
+	vPortWaitForEnd(s_pMenuVPort);
 }
 
 void gsMenuDestroy(void) {
@@ -217,6 +234,8 @@ void gsMenuDestroy(void) {
 
 	bitmapDestroy(s_pGrassBitMap);
 	bitmapDestroy(s_pSplashBitMap);
+
+	cursorDestroy();
 
 	viewDestroy(s_pMenuView);
 

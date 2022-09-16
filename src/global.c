@@ -7,8 +7,8 @@ tFont *g_pFont;
 tBitMap *g_pCharactersBitMap;
 tTextBitMap *g_pTextBitMap;
 
-CHIP UWORD g_pCursorData[288];
-CHIP UWORD g_pPawnCursorData[36];
+UWORD g_pCursorData[288];
+UWORD g_pPawnCursorData[36];
 
 tGameConfig g_sGameConfig = {
 	.pPlayersSelected = {1, 1, 1, 1, 0, 0, 0, 0}, // pPlayersSelected
@@ -47,36 +47,10 @@ BYTE g_pPointerDirs[3][3] = {
 	{POINTER_SW, POINTER_S,  POINTER_SE}
 };
 
-void globalLoadCursorData(void) {
-	const char *szCursorPath = "data/hand.cur";
-	tFile *pFile = fileOpen(szCursorPath, "rb");
-
-	if (!pFile) {
-		logWrite("ERR: File doesn't exist! '%s'", szCursorPath);
-	}
-
-	fileSeek(pFile, 9, FILE_SEEK_CURRENT); // pominiecie naglowka: ubCursorCount + paleta
-	fileRead(pFile, g_pCursorData, 576);
-	fileClose(pFile);
-
-	const char *szPawnPath = "data/pawn.cur";
-	pFile = fileOpen(szPawnPath, "rb");
-
-	if (!pFile) {
-		logWrite("ERR: File doesn't exist! '%s'", szPawnPath);
-	}
-
-	fileSeek(pFile, 9, FILE_SEEK_CURRENT); // pominiecie naglowka: ubCursorCount + paleta
-	fileRead(pFile, g_pPawnCursorData, 72);
-	fileClose(pFile);
-	// TODO:
-	// mouseSetPointer(g_pCursorData, 16, 16, 0, 0);
-}
-
 void globalCreate(void) {
 	logBlockBegin("globalCreate()");
 
-	globalLoadCursorData();
+	// globalLoadCursorData();
 	g_pFont = fontCreate("data/fonts/arpegius-15.fnt");
 	g_pTextBitMap = fontCreateTextBitMap(SCREEN_PAL_WIDTH, g_pFont->uwHeight);
 	g_pCharactersBitMap = bitmapCreateFromFile("data/bitmaps/goblins.bm", FALSE);

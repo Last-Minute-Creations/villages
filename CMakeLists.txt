@@ -41,21 +41,15 @@ set(DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
 set(GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
 # Directory preparation
-file(
-	MAKE_DIRECTORY
-	${DATA_DIR}
-	${GEN_DIR}/tileset
-)
+file(MAKE_DIRECTORY ${DATA_DIR} ${GEN_DIR}/tileset)
 
-file(
-	GLOB
-	RES_FILES
-	${RES_DIR}/*
-)
+file(GLOB RES_FILES ${RES_DIR}/*)
 
-file(
-	COPY
-	${RES_FILES}
-	DESTINATION
-	${DATA_DIR}
+file(COPY ${RES_FILES} DESTINATION ${DATA_DIR})
+
+convertBitmaps(
+	TARGET ${VILLAGES_EXECUTABLE}
+	PALETTE ${RES_DIR}/cursors/cursor.gpl
+	INTERLEAVED SOURCES ${RES_DIR}/cursors/hand.png ${RES_DIR}/cursors/pawn.png
+	DESTINATIONS ${DATA_DIR}/hand.bm ${DATA_DIR}/pawn.bm
 )
