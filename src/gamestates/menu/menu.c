@@ -136,10 +136,7 @@ void gsMenuLobbySetup(void) {
 	fontDrawStr(g_pFont, s_pMenuBuffer->pBack, SCREEN_PAL_WIDTH - 115, 160, "[                 ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
 	fontDrawStr(g_pFont, s_pMenuBuffer->pBack, SCREEN_PAL_WIDTH - 115, 160, "goblins", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
 
-	fontDrawStr(g_pFont, s_pMenuBuffer->pBack, SCREEN_PAL_WIDTH >> 1, 200, "[       play       ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
-	fontDrawStr(g_pFont, s_pMenuBuffer->pBack, SCREEN_PAL_WIDTH >> 1, 220, "[    how to play   ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
-
-	// mouseSetPointer(g_pCursorData, 16, 16, 0, 0);
+	fontDrawStr(g_pFont, s_pMenuBuffer->pBack, SCREEN_PAL_WIDTH / 2, 200, "[       play       ]", COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
 }
 
 void gsMenuLobbyLoop(void) {
@@ -160,8 +157,8 @@ void gsMenuLobbyLoop(void) {
 			if (mouseInRect(MOUSE_PORT_1, (tUwRect) {
 				.uwX = 32 + (32 * ubPlayer),
 				.uwY = 70,
-				.uwHeight = 32,
-				.uwWidth = 32
+				.uwWidth = 32,
+				.uwHeight = 32
 			})) { // Character
 				gsMenuCharacterAction(ubPlayer);
 
@@ -170,36 +167,29 @@ void gsMenuLobbyLoop(void) {
 		}
 
 		if (mouseInRect(MOUSE_PORT_1, (tUwRect) {
-			.uwX = SCREEN_PAL_WIDTH - 115 - (95 >> 1),
+			.uwX = SCREEN_PAL_WIDTH - 115 - (95 / 2),
 			.uwY = 140,
-			.uwHeight = 95,
-			.uwWidth = 15
+			.uwWidth = 95,
+			.uwHeight = 15
 		}) && (g_sGameConfig.ubPawnsPerPlayer < 16)) { // Pawns
-			char szPawnCount[3];
-			sprintf(szPawnCount, "%hhu", g_sGameConfig.ubPawnsPerPlayer);
-			fontDrawStr(g_pFont, s_pMenuBuffer->pBack, SCREEN_PAL_WIDTH - 115, 140, szPawnCount, COLOR_WHITE, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
+			blitCopyAligned(
+				s_pMenuBuffer->pBack, 176, 140 % 32,
+				s_pMenuBuffer->pBack, 176, 140,
+				64, 16
+			);
 
 			g_sGameConfig.ubPawnsPerPlayer += 1;
+			char szPawnCount[3];
 			sprintf(szPawnCount, "%hhu", g_sGameConfig.ubPawnsPerPlayer);
 			fontDrawStr(g_pFont, s_pMenuBuffer->pBack, SCREEN_PAL_WIDTH - 115, 140, szPawnCount, COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
 		}
 		else if (mouseInRect(MOUSE_PORT_1, (tUwRect) {
 			.uwX = (SCREEN_PAL_WIDTH >> 1) - (109 / 2),
 			.uwY = 200,
-			.uwHeight = 109,
-			.uwWidth = 15
+			.uwWidth = 109,
+			.uwHeight = 15
 		})) { // Play
 			gsMenuPlayAction();
-
-			return;
-		}
-		else if (mouseInRect(MOUSE_PORT_1, (tUwRect) {
-			.uwX = (SCREEN_PAL_WIDTH >> 1) - (109 / 2),
-			.uwY = 220,
-			.uwHeight = 109,
-			.uwWidth = 15
-		})) { // How to
-			gsMenuHowToAction();
 
 			return;
 		}
@@ -207,15 +197,18 @@ void gsMenuLobbyLoop(void) {
 
 	if (mouseUse(MOUSE_PORT_1, MOUSE_RMB)) {
 		if (mouseInRect(MOUSE_PORT_1, (tUwRect) {
-			.uwX = SCREEN_PAL_WIDTH - 115 - (95 >> 1),
+			.uwX = SCREEN_PAL_WIDTH - 115 - (95 / 2),
 			.uwY = 140,
-			.uwHeight = 95,
-			.uwWidth = 15
+			.uwWidth = 95,
+			.uwHeight = 15
 		}) && (7 < g_sGameConfig.ubPawnsPerPlayer)) { // Pawns
-			char szPawnCount[3];
-			sprintf(szPawnCount, "%hhu", g_sGameConfig.ubPawnsPerPlayer);
-			fontDrawStr(g_pFont, s_pMenuBuffer->pBack, SCREEN_PAL_WIDTH - 115, 140, szPawnCount, COLOR_WHITE, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);
+			blitCopyAligned(
+				s_pMenuBuffer->pBack, 176, 140 % 32,
+				s_pMenuBuffer->pBack, 176, 140,
+				64, 16
+			);
 
+			char szPawnCount[3];
 			g_sGameConfig.ubPawnsPerPlayer -= 1;
 			sprintf(szPawnCount, "%hhu", g_sGameConfig.ubPawnsPerPlayer);
 			fontDrawStr(g_pFont, s_pMenuBuffer->pBack, SCREEN_PAL_WIDTH - 115, 140, szPawnCount, COLOR_DRKGREEN, FONT_HCENTER | FONT_COOKIE | FONT_SHADOW, g_pTextBitMap);

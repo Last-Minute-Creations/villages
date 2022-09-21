@@ -244,7 +244,7 @@ void gsArcadeLoop(void) {
 		};
 		// TODO: Use const pointer in mouseInRect
 		if (keyUse(KEY_SPACE) || (mouseCheck(MOUSE_PORT_1, MOUSE_LMB) && mouseInRect(MOUSE_PORT_1, sHudRect))) {
-			mouseUse(MOUSE_PORT_1, MOUSE_LMB); // zu�ycie klikni�cia
+			mouseUse(MOUSE_PORT_1, MOUSE_LMB); // zuzycie klikniecia
 			hudExpand();
 		}
 	}
