@@ -4,7 +4,6 @@
 #include <ace/utils/bitmap.h>
 #include <ace/managers/blit.h>
 
-#include "config.h"
 #include "gamestates/arcade/arcade.h"
 #include "gamestates/arcade/logic.h"
 

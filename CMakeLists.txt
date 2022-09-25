@@ -38,18 +38,44 @@ endif()
 
 set(RES_DIR ${CMAKE_CURRENT_LIST_DIR}/res)
 set(DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
-set(GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
 # Directory preparation
-file(MAKE_DIRECTORY ${DATA_DIR} ${GEN_DIR}/tileset)
+file(
+	MAKE_DIRECTORY
+	${DATA_DIR}
+	${DATA_DIR}/palettes
+	${DATA_DIR}/cursors
+	${DATA_DIR}/fonts
+	${DATA_DIR}/debug
+)
 
 file(GLOB RES_FILES ${RES_DIR}/*)
 
-file(COPY ${RES_FILES} DESTINATION ${DATA_DIR})
+# FIXME: This is only to early development
+file(COPY ${RES_DIR}/fonts/arpegius-15.fnt DESTINATION ${DATA_DIR}/fonts)
 
+# Palette
+set(PLT_PATH ${DATA_DIR}/palettes/global.plt)
+set(TRANSPARENCY_HEX "#FF00FF")
+convertPalette(${VILLAGES_EXECUTABLE} ${RES_DIR}/palettes/global.gpl ${PLT_PATH})
+
+# Convert to .bm
 convertBitmaps(
 	TARGET ${VILLAGES_EXECUTABLE}
-	PALETTE ${RES_DIR}/cursors/cursor.gpl
-	INTERLEAVED SOURCES ${RES_DIR}/cursors/hand.png ${RES_DIR}/cursors/pawn.png
-	DESTINATIONS ${DATA_DIR}/hand.bm ${DATA_DIR}/pawn.bm
+	PALETTE ${RES_DIR}/palettes/cursor.gpl
+	INTERLEAVED SOURCES ${RES_DIR}/cursors/hand.png
+	DESTINATIONS ${DATA_DIR}/cursors/hand.bm
+)
+
+convertBitmaps(
+	TARGET ${VILLAGES_EXECUTABLE} PALETTE ${PLT_PATH} MASK_COLOR ${TRANSPARENCY_HEX}
+	SOURCES
+		${RES_DIR}/debug/splash.png
+		${RES_DIR}/debug/scrolls.png
+	DESTINATIONS
+		${DATA_DIR}/debug/splash.bm
+		${DATA_DIR}/debug/scrolls.bm
+	MASKS
+		${DATA_DIR}/debug/splash_mask.bm
+		${DATA_DIR}/debug/scrolls_mask.bm
 )

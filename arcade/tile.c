@@ -8,7 +8,7 @@ tTileList g_sTileList;
 
 /* Functions */
 void tileStackCreate(void) {
-	FILE *pFile = fopen("data/tiles.dat", "rb");
+	FILE *pFile = fopen("data/_old/tiles.dat", "rb");
 
 	UWORD i;
 	for (i = 0; i != TILE_VARIANTS; ++i) {

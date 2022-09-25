@@ -5,7 +5,6 @@
 #include <ace/utils/extview.h>
 #include <ace/utils/font.h>
 
-#include "config.h"
 #include "gamestates/arcade/arcade.h"
 #include "gamestates/arcade/tile.h"
 

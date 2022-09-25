@@ -1,6 +1,5 @@
 #include "player.h"
 
-#include "config.h"
 #include "global.h"
 
 #include <ace/managers/memory.h>

@@ -1,7 +1,6 @@
 #ifndef GUARD_GAMESTATE_ARCADE_LOGIC_H
 #define GUARD_GAMESTATE_ARCADE_LOGIC_H
 
-#include "config.h"
 #include "gamestates/arcade/tile.h"
 
 /* Types */

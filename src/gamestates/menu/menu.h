@@ -7,29 +7,8 @@
 
 /* Globals */
 
-extern tState g_sStateMenu;
+extern tState g_sMenuState;
 
 /* Functions */
-void gsMenuCreate(void);
 
-void gsMenuSplashSetup(void);
-
-void gsMenuSplashLoop(void);
-
-void gsMenuLobbySetup(void);
-
-void gsMenuLobbyLoop(void);
-
-void gsMenuDestroy(void);
-
-void gsMenuDrawBg(void);
-
-void gsMenuCharacterAction(
-	UBYTE ubPlayer
-);
-
-void gsMenuPlayAction(void);
-
-void gsMenuHowToAction(void);
-
-#endif
+#endif // GUARD_GAMESTATE_MENU_MENU_H
