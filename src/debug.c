@@ -2,7 +2,15 @@
 
 #include <ace/utils/custom.h>
 
+/* Types */
+
+/* Globals */
+
+/* Statics */
+
 UBYTE s_isDebug = 0;
+
+/* Functions */
 
 void debugToggle(void) {
 	s_isDebug = !s_isDebug;

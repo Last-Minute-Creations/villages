@@ -11,6 +11,10 @@
 #define GENERIC_MAIN_LOOP_CONDITION g_pGameStateManager->pCurrent
 #include <ace/generic/main.h>
 
+/* Types */
+
+/* Globals */
+
 tFont *g_pFont;
 tTextBitMap *g_pTextBitMap;
 tStateManager *g_pGameStateManager;
@@ -19,6 +23,10 @@ tState *g_pGameStates[GAME_STATE_COUNT] = {
 	[GAME_STATE_BOARD] = &g_sMenuState,
 };
 UWORD g_pPalette[GAME_COLOR_COUNT] = {0};
+
+/* Statics */
+
+/* Functions */
 
 void genericCreate(void) {
 	randInit(0);

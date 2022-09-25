@@ -3,6 +3,12 @@
 
 #include <ace/types.h>
 
+/* Types */
+
+/* Globals */
+
+/* Functions */
+
 void debugToggle(void);
 
 void debugSetColor(UWORD uwColor);

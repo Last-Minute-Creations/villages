@@ -14,19 +14,25 @@
 #include "cursor.h"
 #include "debug.h"
 #include "fade.h"
+#include "utils.h"
+
+#include "gamestates/menu/actions.h"
 
 /* Types */
 
 /* Globals */
 
+tSimpleBufferManager *g_pMenuBuffer;
+tStateManager g_sMenuStateManager;
+tBitMap *g_pSplashBitMap;
+
+tState g_sMenuStateSplash;
+tState g_sMenuStateMainMenu;
+
 /* Statics */
 
 static tView *s_pMenuView;
 static tVPort *s_pMenuVPort;
-static tSimpleBufferManager *s_pMenuBuffer;
-static tStateManager s_sMenuStateManager;
-
-static tState s_sMenuStateSplash;
 
 /* Functions */
 
@@ -42,23 +48,22 @@ void gsMenuCreate(void) {
 		NULL,
 		TAG_VPORT_VIEW, s_pMenuView,
 		TAG_VPORT_BPP, GAME_BPP,
-		// TAG_VPORT_PALETTE_PTR, g_pPalette,
-		// TAG_VPORT_PALETTE_SIZE, GAME_COLOR_COUNT,
 		TAG_DONE
 	);
-	s_pMenuBuffer = simpleBufferCreate(
+	g_pMenuBuffer = simpleBufferCreate(
 		NULL,
 		TAG_SIMPLEBUFFER_VPORT, s_pMenuVPort,
 		TAG_DONE
 	);
 
 	cursorCreate(s_pMenuView, 0, "data/cursors/hand.bm", 0);
+	g_pSplashBitMap = bitmapCreateFromFile("data/debug/splash.bm", TRUE);
 
 	copBlockDisableSprites(s_pMenuView->pCopList, 0xFE);
 	systemSetDmaBit(DMAB_SPRITE, TRUE);
 	viewLoad(s_pMenuView);
 
-	statePush(&s_sMenuStateManager, &s_sMenuStateSplash);
+	statePush(&g_sMenuStateManager, &g_sMenuStateSplash);
 
 	logBlockEnd("gsMenuCreate()");
 
@@ -73,7 +78,7 @@ void gsMenuLoop(void) {
 	debugSetColor(0x800);
 	cursorUpdate();
 
-	stateProcess(&s_sMenuStateManager);
+	stateProcess(&g_sMenuStateManager);
 
 	viewProcessManagers(s_pMenuView);
 	copProcessBlocks();
@@ -82,50 +87,14 @@ void gsMenuLoop(void) {
 	vPortWaitForEnd(s_pMenuVPort);
 }
 
-void gsMenuSplashCreate(void) {
-	logBlockBegin("gsMenuSplashCreate()");
-
-	systemUse();
-
-	bitmapLoadFromFile(s_pMenuBuffer->pBack, "data/debug/splash.bm", 0, 0);
-
-	fadeMorphTo(FADE_TARGET_IN);
-
-	systemUnuse();
-
-	logBlockEnd("gsMenuSplashCreate()");
-}
-
-void gsMenuSplashLoop(void) {
-	fadeProcess();
-	if (fadeGetState() == FADE_STATE_MORPHING) {
-		paletteDim(s_pMenuVPort->pPalette, (UWORD *) g_pCustom->color, GAME_COLOR_COUNT, fadeGetLevel());
-	}
-
-	if (keyUse(KEY_ESCAPE)) {
-		statePop(g_pGameStateManager);
-		return;
-	}
-
-	if (keyUse(KEY_UP)) {
-		logWrite("Up!");
-		fadeMorphTo(FADE_TARGET_IN);
-	}
-
-	if (keyUse(KEY_DOWN)) {
-		logWrite("Down!");
-		fadeMorphTo(FADE_TARGET_OUT);
-	}
-
-	// if (mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
-	// 	stateChange(&s_sMenuStateManager, &s_sMenuStateLobby);
-	// }
-}
-
 void gsMenuDestroy(void) {
 	systemUse();
 
 	logBlockBegin("gsMenuDestroy()");
+
+	statePopAll(&g_sMenuStateManager);
+
+	bitmapDestroy(g_pSplashBitMap);
 
 	cursorDestroy();
 
@@ -134,13 +103,67 @@ void gsMenuDestroy(void) {
 	logBlockEnd("gsMenuDestroy()");
 }
 
+void gsMenuSplashCreate(void) {
+	logBlockBegin("gsMenuSplashCreate()");
+
+	blitCopyAligned(
+		g_pSplashBitMap, 0, 0,
+		g_pMenuBuffer->pBack, 0, 0,
+		GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT
+	);
+
+	fadeMorphTo(FADE_TARGET_IN);
+	gsMenuSetQueuedMenuAction(MENU_ACTION_DRAW_SPLASH_PROMPT, FALSE);
+
+	logBlockEnd("gsMenuSplashCreate()");
+}
+
+void gsMenuCheckForActions() {
+	if (keyUse(KEY_ESCAPE)) {
+		gsMenuSetQueuedMenuAction(MENU_ACTION_EXIT, TRUE);
+	}
+	else if (mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
+		gsMenuSetQueuedMenuAction(MENU_ACTION_SHOW_MAIN_MENU, FALSE);
+	}
+}
+
+void gsMenuSplashLoop(void) {
+	fadeProcess();
+	if (fadeGetState() == FADE_STATE_MORPHING) {
+		paletteDim(g_pPalette, (UWORD *) g_pCustom->color, GAME_COLOR_COUNT, fadeGetLevel());
+	}
+	else {
+		if (gsMenuGetQueuedMenuAction() != MENU_ACTION_NONE) {
+			gsMenuCallQueuedMenuAction();
+		}
+		else {
+			gsMenuCheckForActions();
+		}
+	}
+}
+
+void gsMenuSplashDestroy() {
+	logBlockBegin("gsMenuSplashDestroy()");
+
+	gsMenuCallMenuAction(MENU_ACTION_UNDRAW_SPLASH_PROMPT);
+
+	logBlockEnd("gsMenuSplashDestroy()");
+}
+
 tState g_sMenuState = {
 	.cbCreate = gsMenuCreate,
 	.cbLoop = gsMenuLoop,
 	.cbDestroy = gsMenuDestroy,
 };
 
-static tState s_sMenuStateSplash = {
+tState g_sMenuStateSplash = {
 	.cbCreate = gsMenuSplashCreate,
 	.cbLoop = gsMenuSplashLoop,
+	.cbDestroy = gsMenuSplashDestroy,
+};
+
+tState g_sMenuStateMainMenu = {
+	.cbCreate = gsMenuSplashCreate,
+	.cbLoop = gsMenuSplashLoop,
+	.cbDestroy = gsMenuSplashDestroy,
 };

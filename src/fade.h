@@ -3,6 +3,8 @@
 
 #include <ace/types.h>
 
+/* Types */
+
 #define FADE_MAX_LEVEL 0xF
 
 typedef enum _tFadeTarget {
@@ -14,6 +16,10 @@ typedef enum _tFadeState {
 	FADE_STATE_MORPHING,
 	FADE_STATE_MORPHING_DONE,
 } tFadeState;
+
+/* Globals */
+
+/* Functions */
 
 tFadeState fadeGetState(void);
 
