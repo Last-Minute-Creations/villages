@@ -52,7 +52,7 @@ void gsMenuCallMenuAction(tMenuAction eMenuAction) {
 }
 
 void gsMenuActionExit(void) {
-	statePop(g_pGameStateManager);
+	statePop(g_pStateManager);
 }
 
 void gsMenuActionShowSlpash(void) {

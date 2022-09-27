@@ -31,7 +31,6 @@ tState g_sMenuStateMainMenu;
 
 /* Statics */
 
-static tView *s_pMenuView;
 static tVPort *s_pMenuVPort;
 
 /* Functions */
@@ -39,14 +38,11 @@ static tVPort *s_pMenuVPort;
 void gsMenuCreate(void) {
 	logBlockBegin("gsMenuCreate()");
 
-	s_pMenuView = viewCreate(
-		NULL,
-		TAG_VIEW_GLOBAL_CLUT, 1,
-		TAG_DONE
-	);
+	viewLoad(0);
+
 	s_pMenuVPort = vPortCreate(
 		NULL,
-		TAG_VPORT_VIEW, s_pMenuView,
+		TAG_VPORT_VIEW, g_pView,
 		TAG_VPORT_BPP, GAME_BPP,
 		TAG_DONE
 	);
@@ -56,12 +52,9 @@ void gsMenuCreate(void) {
 		TAG_DONE
 	);
 
-	cursorCreate(s_pMenuView, 0, "data/cursors/hand.bm", 0);
 	g_pSplashBitMap = bitmapCreateFromFile("data/debug/splash.bm", TRUE);
 
-	copBlockDisableSprites(s_pMenuView->pCopList, 0xFE);
-	systemSetDmaBit(DMAB_SPRITE, TRUE);
-	viewLoad(s_pMenuView);
+	viewLoad(g_pView);
 
 	statePush(&g_sMenuStateManager, &g_sMenuStateSplash);
 
@@ -80,7 +73,7 @@ void gsMenuLoop(void) {
 
 	stateProcess(&g_sMenuStateManager);
 
-	viewProcessManagers(s_pMenuView);
+	viewProcessManagers(g_pView);
 	copProcessBlocks();
 
 	debugSetColor(s_pMenuVPort->pPalette[0]);
@@ -96,9 +89,7 @@ void gsMenuDestroy(void) {
 
 	bitmapDestroy(g_pSplashBitMap);
 
-	cursorDestroy();
-
-	viewDestroy(s_pMenuView);
+	viewDestroy(g_pView);
 
 	logBlockEnd("gsMenuDestroy()");
 }

@@ -7,21 +7,15 @@
 /**
  * Creates cursor on supplied view.
  * @param pView        Parent view.
- * @param ubSpriteIdx Index of sprite to be used. Must not be disabled
- *                     by cop*DisableSprites().
  * @param szPath       Path to 2bpp interleaved bitmap used as cursor.
  *                     Bitmap has to have two unused lines on top & bottom
  *                     of cursor image.
- * @param uwRawCopPos  If copperlist is in raw mode, specify position
- *                     for 2 MOVEs. Should be as close to 0,0 as possible.
  * @todo Passing hotspot coord as params.
  * @todo Support for 4bpp sprites.
  */
 void cursorCreate(
 	tView *pView,
-	UBYTE ubSpriteIdx,
-	char *szPath,
-	UWORD uwRawCopPos
+	char *szPath
 );
 
 /**
