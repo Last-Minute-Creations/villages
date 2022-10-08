@@ -1,4 +1,4 @@
-#include "menu.h"
+#include "gamestates/menu/menu.h"
 
 #include <ace/managers/game.h>
 #include <ace/managers/key.h>
@@ -17,11 +17,13 @@
 #include "utils.h"
 
 #include "gamestates/menu/actions.h"
+#include "gamestates/menu/scrolls.h"
 
 /* Types */
 
 /* Globals */
 
+tVPort *g_pMenuVPort;
 tSimpleBufferManager *g_pMenuBuffer;
 tStateManager g_sMenuStateManager;
 tBitMap *g_pSplashBitMap;
@@ -31,8 +33,6 @@ tState g_sMenuStateMainMenu;
 
 /* Statics */
 
-static tVPort *s_pMenuVPort;
-
 /* Functions */
 
 void gsMenuCreate(void) {
@@ -40,7 +40,7 @@ void gsMenuCreate(void) {
 
 	viewLoad(0);
 
-	s_pMenuVPort = vPortCreate(
+	g_pMenuVPort = vPortCreate(
 		NULL,
 		TAG_VPORT_VIEW, g_pView,
 		TAG_VPORT_BPP, GAME_BPP,
@@ -48,11 +48,13 @@ void gsMenuCreate(void) {
 	);
 	g_pMenuBuffer = simpleBufferCreate(
 		NULL,
-		TAG_SIMPLEBUFFER_VPORT, s_pMenuVPort,
+		TAG_SIMPLEBUFFER_VPORT, g_pMenuVPort,
+		TAG_SIMPLEBUFFER_USE_X_SCROLLING, FALSE,
 		TAG_DONE
 	);
 
 	g_pSplashBitMap = bitmapCreateFromFile("data/debug/splash.bm", TRUE);
+	scrollsCreate();
 
 	viewLoad(g_pView);
 
@@ -64,20 +66,23 @@ void gsMenuCreate(void) {
 }
 
 void gsMenuLoop(void) {
+	debugSetColor(g_pMenuVPort->pPalette[0]);
+
 	if (keyUse(KEY_TAB)) {
 		debugToggle();
 	}
 
-	debugSetColor(0x800);
 	cursorUpdate();
 
+	debugSetColor(0x800);
 	stateProcess(&g_sMenuStateManager);
+	debugSetColor(0x008);
 
 	viewProcessManagers(g_pView);
 	copProcessBlocks();
 
-	debugSetColor(s_pMenuVPort->pPalette[0]);
-	vPortWaitForEnd(s_pMenuVPort);
+	debugSetColor(g_pMenuVPort->pPalette[0]);
+	vPortWaitForEnd(g_pMenuVPort);
 }
 
 void gsMenuDestroy(void) {
@@ -87,6 +92,7 @@ void gsMenuDestroy(void) {
 
 	statePopAll(&g_sMenuStateManager);
 
+	scrollsDestroy();
 	bitmapDestroy(g_pSplashBitMap);
 
 	viewDestroy(g_pView);
@@ -109,7 +115,7 @@ void gsMenuSplashCreate(void) {
 	logBlockEnd("gsMenuSplashCreate()");
 }
 
-void gsMenuCheckForActions() {
+void gsMenuCheckForActions(void) {
 	if (keyUse(KEY_ESCAPE)) {
 		gsMenuSetQueuedMenuAction(MENU_ACTION_EXIT, TRUE);
 	}
@@ -118,22 +124,56 @@ void gsMenuCheckForActions() {
 	}
 }
 
+BYTE bDirLeft = 1;
+BYTE bDirRight = 1;
+
 void gsMenuSplashLoop(void) {
 	fadeProcess();
+
 	if (fadeGetState() == FADE_STATE_MORPHING) {
 		paletteDim(g_pPalette, (UWORD *) g_pCustom->color, GAME_COLOR_COUNT, fadeGetLevel());
+		return;
+	}
+
+	// if (keyUse(KEY_SPACE)) {
+		scrollsProcess();
+	// }
+
+	if (gsMenuGetQueuedMenuAction() != MENU_ACTION_NONE) {
+		gsMenuCallQueuedMenuAction();
 	}
 	else {
-		if (gsMenuGetQueuedMenuAction() != MENU_ACTION_NONE) {
-			gsMenuCallQueuedMenuAction();
+		gsMenuCheckForActions();
+	}
+
+	if (bDirLeft) {
+		if (scrollsRequestStage(SCROLL_LEFT, SCROLL_STAGE_OPEN)) {
+			logWrite("Left log opened!");
+			bDirLeft = 0;
 		}
-		else {
-			gsMenuCheckForActions();
+	}
+	else {
+		if (scrollsRequestStage(SCROLL_LEFT, SCROLL_STAGE_CLOSED)) {
+			logWrite("Left log closed!");
+			bDirLeft = 1;
+		}
+	}
+
+	if (bDirRight) {
+		if (scrollsRequestStage(SCROLL_RIGHT, SCROLL_STAGE_OPEN)) {
+			logWrite("Right log opened!");
+			bDirRight = 0;
+		}
+	}
+	else {
+		if (scrollsRequestStage(SCROLL_RIGHT, SCROLL_STAGE_CLOSED)) {
+			logWrite("Right log closed!");
+			bDirRight = 1;
 		}
 	}
 }
 
-void gsMenuSplashDestroy() {
+void gsMenuSplashDestroy(void) {
 	logBlockBegin("gsMenuSplashDestroy()");
 
 	gsMenuCallMenuAction(MENU_ACTION_UNDRAW_SPLASH_PROMPT);

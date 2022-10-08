@@ -8,6 +8,7 @@
 
 /* Globals */
 
+extern tVPort *g_pMenuVPort;
 extern tSimpleBufferManager *g_pMenuBuffer;
 extern tStateManager g_sMenuStateManager;
 extern tBitMap *g_pSplashBitMap;

@@ -56,7 +56,7 @@ file(COPY ${RES_DIR}/fonts/arpegius-15.fnt DESTINATION ${DATA_DIR}/fonts)
 
 # Palette
 set(PLT_PATH ${DATA_DIR}/palettes/global.plt)
-set(TRANSPARENCY_HEX "#FF00FF")
+set(TRANSPARENCY_HEX "#880088")
 convertPalette(${VILLAGES_EXECUTABLE} ${RES_DIR}/palettes/global.gpl ${PLT_PATH})
 
 # Convert to .bm

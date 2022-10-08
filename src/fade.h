@@ -9,7 +9,7 @@
 
 typedef enum _tFadeTarget {
     FADE_TARGET_OUT, // Faded to black
-    FADE_TARGET_IN, // Faded to target palette
+    FADE_TARGET_IN, // Original palette
 } tFadeTarget;
 
 typedef enum _tFadeState {
