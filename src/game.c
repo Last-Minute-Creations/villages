@@ -51,7 +51,7 @@ void genericCreate(void) {
 	paletteLoad("data/palettes/global.plt", g_pPalette, GAME_COLOR_COUNT);
 
 	g_pStateManager = stateManagerCreate();
-	statePush(g_pStateManager, g_pStates[GAME_STATE_BOARD]);
+	statePush(g_pStateManager, g_pStates[GAME_STATE_MENU]);
 }
 
 void genericProcess(void) {

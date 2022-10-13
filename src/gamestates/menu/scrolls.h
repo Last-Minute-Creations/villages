@@ -13,13 +13,15 @@ typedef enum _tScrollType {
     SCROLL_COUNT,
 } tScrollType;
 
-typedef enum _tScrollStage {
-    SCROLL_STAGE_HIDDEN,
-    SCROLL_STAGE_CLOSED,
-    SCROLL_STAGE_OPEN,
-} tScrollStage;
+typedef enum _tScrollState {
+    SCROLL_STATE_HIDDEN,
+    SCROLL_STATE_CLOSED,
+    SCROLL_STATE_OPEN,
+} tScrollState;
 
 /* Globals */
+
+extern tBitMap *g_ppScrollsContentBitMap[SCROLL_COUNT];
 
 /* Functions */
 
@@ -34,11 +36,13 @@ void scrollsDestroy(void);
 void scrollsProcess(void);
 
 /**
- * @brief Returns TRUE, if provided scroll is at desired stage. Returns FALSE
- * if not, but also starts the animation loop flags for scrollsProcess to
- * ultimately meet stage requirements in next game frames. It ment be called on
- * each game loop in IF statements as guard which brings neat usage.
+ * @brief Returns TRUE, if provided fade is at desired state. Returns FALSE
+ * if not, makes step of animation to ultimately meet state requirements in
+ * next game frames. It ment be called on each game loop in IF statements as
+ * guard which brings neat usage.
  */
-BYTE scrollsRequestStage(tScrollType eScrollType, tScrollStage eScrollStage);
+UBYTE scrollsRequestState(tScrollType eScrollType, tScrollState eScrollState);
+
+void scrollsSetContentHeight(tScrollType eScrollType, UWORD uwContentHeight);
 
 #endif // GUARD_GAMESTATE_MENU_SCROLLS_H

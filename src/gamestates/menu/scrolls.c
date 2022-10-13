@@ -12,14 +12,14 @@
 /* Types */
 
 #define SCROLLS_MARGIN 16
-#define SCROLLS_X_SPEED 2
+#define SCROLLS_X_SPEED 16
 #define SCROLLS_Y_SPEED 16
 
 #define SCROLL_LEFT_WIDTH 144
 #define SCROLL_RIGHT_WIDTH 128
 
 #define SCROLL_EDGE_WIDTH 16
-#define SCROLL_EDGE_HEIGHT 208
+#define SCROLL_EDGE_HEIGHT 192
 
 #define SCROLL_BAR_HEIGHT 16
 
@@ -29,12 +29,13 @@
 #define SCROLL_BAR_BOTTOM_OPEN_Y_POS (GAME_SCREEN_HEIGHT - SCROLLS_MARGIN - SCROLL_BAR_HEIGHT)
 #define SCROLL_BAR_BOTTOM_CLOSED_Y_POS (GAME_SCREEN_HEIGHT / 2)
 
-#define SCROLL_CONTENT_OVERDRAW_SIZE 8
 #define SCROLL_CONTENT_COLOR_INDEX 14
-#define SCROLL_CONTENT_TO_SCREEN_Y_OFFSET (SCROLL_BAR_TOP_OPEN_Y_POS + SCROLL_BAR_HEIGHT - SCROLL_CONTENT_OVERDRAW_SIZE)
+#define SCROLL_CONTENT_TO_SCREEN_Y_OFFSET (SCROLL_BAR_TOP_OPEN_Y_POS + SCROLL_BAR_HEIGHT)
 
 #define SCROLL_LEFT_CONTENT_WIDTH (SCROLL_LEFT_WIDTH - (SCROLL_EDGE_WIDTH * 2))
-#define SCROLL_LEFT_HIDDEN_X_POS -SCROLL_LEFT_WIDTH
+// FIXME: Rollback after https://github.com/AmigaPorts/ACE/issues/162 is fixed
+// #define SCROLL_LEFT_HIDDEN_X_POS -SCROLL_LEFT_WIDTH
+#define SCROLL_LEFT_HIDDEN_X_POS GAME_SCREEN_WIDTH
 #define SCROLL_LEFT_OPEN_X_POS SCROLLS_MARGIN
 
 #define SCROLL_RIGHT_CONTENT_WIDTH (SCROLL_RIGHT_WIDTH - (SCROLL_EDGE_WIDTH * 2))
@@ -54,7 +55,7 @@ typedef struct _tScrollPos {
 } tScrollPos;
 
 typedef struct _tScrollData {
-    tScrollStage eStage;
+    tScrollState eState;
     UWORD uwWidth;
     UWORD uwContentWidth;
     UWORD uwContentHeight;
@@ -64,14 +65,15 @@ typedef struct _tScrollData {
 
 /* Globals */
 
+tBitMap *g_ppScrollsContentBitMap[SCROLL_COUNT];
+
 /* Statics */
 
 static tBitMap *s_pScrollsBitMap;
 static tBitMap *s_pScrollsMaskBitMap;
-static tBitMap *s_ppScrollsContentBitMap[SCROLL_COUNT];
 static tScrollData s_pScrollsData[SCROLL_COUNT] = {
     {
-        .eStage = SCROLL_STAGE_CLOSED,
+        .eState = SCROLL_STATE_HIDDEN,
         .uwWidth = SCROLL_LEFT_WIDTH,
         .uwContentWidth = SCROLL_LEFT_CONTENT_WIDTH,
         .uwContentHeight = 0,
@@ -94,7 +96,7 @@ static tScrollData s_pScrollsData[SCROLL_COUNT] = {
         },
     },
     {
-        .eStage = SCROLL_STAGE_CLOSED,
+        .eState = SCROLL_STATE_HIDDEN,
         .uwWidth = SCROLL_RIGHT_WIDTH,
         .uwContentWidth = SCROLL_RIGHT_CONTENT_WIDTH,
         .uwContentHeight = 0,
@@ -130,8 +132,8 @@ void scrollsCreate(void) {
     s_pScrollsMaskBitMap = bitmapCreateFromFile("data/debug/scrolls_mask.bm", FALSE);
 
     for (tScrollType eScrollTye = SCROLL_LEFT; eScrollTye < SCROLL_COUNT; ++eScrollTye) {
-        s_ppScrollsContentBitMap[eScrollTye] = bitmapCreate(s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, GAME_BPP, 0);
-        blitRect(s_ppScrollsContentBitMap[eScrollTye], 0, 0, s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, SCROLL_CONTENT_COLOR_INDEX);
+        g_ppScrollsContentBitMap[eScrollTye] = bitmapCreate(s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, GAME_BPP, 0);
+        blitRect(g_ppScrollsContentBitMap[eScrollTye], 0, 0, s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, SCROLL_CONTENT_COLOR_INDEX);
     }
 
     logBlockEnd("scrollsCreate()");
@@ -141,7 +143,7 @@ void scrollsDestroy(void) {
     logBlockBegin("scrollsDestroy()");
 
     for (tScrollType eScrollTye = SCROLL_LEFT; eScrollTye < SCROLL_COUNT; ++eScrollTye) {
-        bitmapDestroy(s_ppScrollsContentBitMap[eScrollTye]);
+        bitmapDestroy(g_ppScrollsContentBitMap[eScrollTye]);
     }
 
     bitmapDestroy(s_pScrollsMaskBitMap);
@@ -150,51 +152,53 @@ void scrollsDestroy(void) {
     logBlockEnd("scrollsDestroy()");
 }
 
-void scrollsMoveTo(tScrollType eScrollType, tScrollStage eScrollStage) {
+void scrollsSetTarget(tScrollType eScrollType, tScrollState eScrollState) {
     tScrollData *pScroll = &s_pScrollsData[eScrollType];
 
-    pScroll->eStage = eScrollStage;
+    pScroll->eState = eScrollState;
 
     // To start new animation, we need to set target coords for animation to reach
-    switch (eScrollStage) {
-        case SCROLL_STAGE_OPEN:
+    switch (eScrollState) {
+        case SCROLL_STATE_OPEN:
+            UWORD uwHalfContentHeight = pScroll->uwContentHeight / 2;
+
             pScroll->sXPos.wTarget = eScrollType == SCROLL_LEFT ? SCROLL_LEFT_OPEN_X_POS : SCROLL_RIGHT_OPEN_X_POS;
-            pScroll->pBarYPos[SCROLL_BAR_TOP].wTarget = SCROLL_BAR_TOP_OPEN_Y_POS;
-            pScroll->pBarYPos[SCROLL_BAR_BOTTOM].wTarget = SCROLL_BAR_BOTTOM_OPEN_Y_POS;
+            pScroll->pBarYPos[SCROLL_BAR_TOP].wTarget = MAX(SCROLL_BAR_TOP_CLOSED_Y_POS - uwHalfContentHeight, SCROLL_BAR_TOP_OPEN_Y_POS);
+            pScroll->pBarYPos[SCROLL_BAR_BOTTOM].wTarget = MIN(SCROLL_BAR_BOTTOM_CLOSED_Y_POS + uwHalfContentHeight, SCROLL_BAR_BOTTOM_OPEN_Y_POS);;
             break;
-        case SCROLL_STAGE_CLOSED:
+        case SCROLL_STATE_CLOSED:
             pScroll->sXPos.wTarget = eScrollType == SCROLL_LEFT ? SCROLL_LEFT_OPEN_X_POS : SCROLL_RIGHT_OPEN_X_POS;
             pScroll->pBarYPos[SCROLL_BAR_TOP].wTarget = SCROLL_BAR_TOP_CLOSED_Y_POS;
             pScroll->pBarYPos[SCROLL_BAR_BOTTOM].wTarget = SCROLL_BAR_BOTTOM_CLOSED_Y_POS;
             break;
-        case SCROLL_STAGE_HIDDEN:
+        case SCROLL_STATE_HIDDEN:
             pScroll->sXPos.wTarget = eScrollType == SCROLL_LEFT ? SCROLL_LEFT_HIDDEN_X_POS : SCROLL_RIGHT_HIDDEN_X_POS;
             pScroll->pBarYPos[SCROLL_BAR_TOP].wTarget = SCROLL_BAR_TOP_CLOSED_Y_POS;
             pScroll->pBarYPos[SCROLL_BAR_BOTTOM].wTarget = SCROLL_BAR_BOTTOM_CLOSED_Y_POS;
             break;
     };
 
-    logWrite("Scroll %d started animation to %d", eScrollType, eScrollStage);
+    logWrite("Scroll %d started animation to %d", eScrollType, eScrollState);
 }
 
-BYTE scrollsIsScrollBarDrawYOutdated(tScrollType eScrollType, tScrollBarType eScrollBarType) {
+UBYTE scrollsIsScrollBarDrawYOutdated(tScrollType eScrollType, tScrollBarType eScrollBarType) {
     tScrollData *pScroll = &s_pScrollsData[eScrollType];
     tScrollPos *pYPos = &pScroll->pBarYPos[eScrollBarType];
 
     return pYPos->wCurrent != pYPos->wLast;
 }
 
-BYTE scrollsIsScrollBarDrawXOutdated(tScrollType eScrollType) {
+UBYTE scrollsIsScrollBarDrawXOutdated(tScrollType eScrollType) {
     return s_pScrollsData[eScrollType].sXPos.wCurrent != s_pScrollsData[eScrollType].sXPos.wLast;
 }
 
-BYTE scrollIsScrollAnimationInProgress(tScrollType eScrollType) {
+UBYTE scrollIsScrollAnimationComplete(tScrollType eScrollType) {
     tScrollData *pScroll = &s_pScrollsData[eScrollType];
     tScrollPos *pXPos = &pScroll->sXPos;
 
-    return (pXPos->wCurrent != pXPos->wTarget) ||
-        (pScroll->pBarYPos[SCROLL_BAR_TOP].wCurrent != pScroll->pBarYPos[SCROLL_BAR_TOP].wTarget) ||
-        (pScroll->pBarYPos[SCROLL_BAR_BOTTOM].wCurrent != pScroll->pBarYPos[SCROLL_BAR_BOTTOM].wTarget);
+    return (pXPos->wCurrent == pXPos->wTarget) &&
+        (pScroll->pBarYPos[SCROLL_BAR_TOP].wCurrent == pScroll->pBarYPos[SCROLL_BAR_TOP].wTarget) &&
+        (pScroll->pBarYPos[SCROLL_BAR_BOTTOM].wCurrent == pScroll->pBarYPos[SCROLL_BAR_BOTTOM].wTarget);
 }
 
 void scrollsMakeStepToTargetPos(tScrollPos *pBarPos, UBYTE ubSpeed) {
@@ -205,7 +209,7 @@ void scrollsMakeStepToTargetPos(tScrollPos *pBarPos, UBYTE ubSpeed) {
     );
 }
 
-void scrollsAnimatePos() {
+void scrollsAnimatePos(void) {
     tScrollPos *pBarXPos = &s_pScrollsData[s_eScrollDrawTurn].sXPos;
     tScrollPos *pBarYPos = &s_pScrollsData[s_eScrollDrawTurn].pBarYPos[s_eScrollBarDrawTurn];
 
@@ -224,45 +228,35 @@ void scrollsDrawXAnimation(tScrollType eScrollType) {
     tScrollPos *pXPos = &pScroll->sXPos;
 
     // Due to transparency, draw background over last and current position, minding that X movement can't draw outside the screen
-    // {
-    //     WORD wLeftOffscreenSize = -MIN(0, pXPos->wLast);
-    //     WORD wRightOffscreenSize = MAX(0, pXPos->wLast + (WORD) pScroll->uwWidth - GAME_SCREEN_WIDTH);
-    //     UWORD uwActualWidth = pScroll->uwWidth - wLeftOffscreenSize - wRightOffscreenSize;
+    {
+        WORD wLeftOffscreenSize = -MIN(0, pXPos->wLast);
+        WORD wRightOffscreenSize = MAX(0, pXPos->wLast + (WORD) pScroll->uwWidth - GAME_SCREEN_WIDTH);
+        UWORD uwActualWidth = pScroll->uwWidth - wLeftOffscreenSize - wRightOffscreenSize;
 
-    //     if (uwActualWidth) {
-    //         logWrite("Last:");
-    //         logWrite("Offscreens: %d %d", wLeftOffscreenSize, wRightOffscreenSize);
-    //         logWrite("Source: %d %d", wLeftOffscreenSize, SCROLL_BAR_HEIGHT * eScrollType * 2);
-    //         logWrite("Desc: %d %d", pXPos->wLast + wLeftOffscreenSize, SCROLL_BAR_TOP_CLOSED_Y_POS);
-    //         logWrite("Sizes: %d %d", uwActualWidth, SCROLL_BAR_HEIGHT * 2);
-    //         logWrite(" ");
-    //         blitCopy(
-    //             g_pSplashBitMap, wLeftOffscreenSize, SCROLL_BAR_HEIGHT * eScrollType * 2,
-    //             g_pMenuBuffer->pBack, pXPos->wLast + wLeftOffscreenSize, SCROLL_BAR_TOP_CLOSED_Y_POS,
-    //             uwActualWidth, SCROLL_BAR_HEIGHT * 2,
-    //             MINTERM_COOKIE
-    //         );
-    //     }
-    // }
+        if (uwActualWidth) {
+            blitCopy(
+                g_pSplashBitMap, pXPos->wLast + wLeftOffscreenSize, SCROLL_BAR_TOP_CLOSED_Y_POS,
+                g_pMenuBuffer->pBack, pXPos->wLast + wLeftOffscreenSize, SCROLL_BAR_TOP_CLOSED_Y_POS,
+                uwActualWidth, SCROLL_BAR_HEIGHT * 2,
+                MINTERM_COOKIE
+            );
+        }
+    }
 
     // Lets draw current position, minding that X movement can't draw outside the screen
     {
         WORD wLeftOffscreenSize = -MIN(0, pXPos->wCurrent);
         WORD wRightOffscreenSize = MAX(0, pXPos->wCurrent + (WORD) pScroll->uwWidth - GAME_SCREEN_WIDTH);
+        UWORD uwActualWidth = pScroll->uwWidth - wLeftOffscreenSize - wRightOffscreenSize;
 
-        logWrite("Current:");
-        logWrite("Offscreens: %d %d", wLeftOffscreenSize, wRightOffscreenSize);
-        logWrite("Source: %d %d", wLeftOffscreenSize, SCROLL_BAR_HEIGHT * eScrollType * 2);
-        logWrite("Desc: %d %d", pXPos->wCurrent + wLeftOffscreenSize, SCROLL_BAR_TOP_CLOSED_Y_POS);
-        logWrite("Sizes: %d %d", pScroll->uwWidth - wLeftOffscreenSize - wRightOffscreenSize, SCROLL_BAR_HEIGHT * 2);
-        logWrite(" - - - - -");
-        // FIXME
-        blitCopyMask(
-            s_pScrollsBitMap, 20, SCROLL_BAR_HEIGHT * eScrollType * 2,
-            g_pMenuBuffer->pBack, 0, SCROLL_BAR_TOP_CLOSED_Y_POS,
-            124, SCROLL_BAR_HEIGHT * 2,
-            (const UWORD *) s_pScrollsMaskBitMap->Planes[0]
-        );
+        if (uwActualWidth) {
+            blitCopyMask(
+                s_pScrollsBitMap, wLeftOffscreenSize, SCROLL_BAR_HEIGHT * eScrollType * 2,
+                g_pMenuBuffer->pBack, pXPos->wCurrent + wLeftOffscreenSize, SCROLL_BAR_TOP_CLOSED_Y_POS,
+                uwActualWidth, SCROLL_BAR_HEIGHT * 2,
+                (const UWORD *) s_pScrollsMaskBitMap->Planes[0]
+            );
+        }
     }
 
     // Let's remember where we just draw, to undraw that on next iteration
@@ -278,33 +272,33 @@ void scrollsDrawYAnimation(tScrollType eScrollType, tScrollBarType eScrollBarTyp
     tScrollPos *pYPos = &pScroll->pBarYPos[eScrollBarType];
     tScrollPos *pXPos = &pScroll->sXPos;
     WORD wMinYPos = MIN(pYPos->wCurrent, pYPos->wLast);
+    UWORD uwYPosDiff = ABS(pYPos->wCurrent - pYPos->wLast);
 
-    vPortWaitForPos(g_pMenuVPort, MAX(pYPos->wCurrent + SCROLL_BAR_HEIGHT, pYPos->wLast + SCROLL_BAR_HEIGHT), 0);
+    // As we're using single buffering, we don't want to draw before screen beam position
+    // vPortWaitForPos(g_pMenuVPort, MAX(pYPos->wCurrent + SCROLL_BAR_HEIGHT, pYPos->wLast + SCROLL_BAR_HEIGHT), 0);
 
     // Due to transparency, draw background over last and current position
     {
         blitCopyAligned(
             g_pSplashBitMap, pXPos->wLast, wMinYPos,
             g_pMenuBuffer->pBack, pXPos->wLast, wMinYPos,
-            pScroll->uwWidth, SCROLL_BAR_HEIGHT + SCROLLS_Y_SPEED
+            pScroll->uwWidth, SCROLL_BAR_HEIGHT + uwYPosDiff
         );
     }
 
-    // Due to overdraw and transparency, lets draw overdraw with exposed content
-    {
-        UBYTE isOpening = (
-            ((pYPos->wCurrent < pYPos->wLast) && (eScrollBarType == SCROLL_BAR_TOP)) ||
-            ((pYPos->wLast < pYPos->wCurrent) && (eScrollBarType == SCROLL_BAR_BOTTOM))
-        );
-        UWORD uwScrollBarHeightOffset = (SCROLL_BAR_HEIGHT - SCROLL_CONTENT_OVERDRAW_SIZE) - ((SCROLL_BAR_HEIGHT - SCROLL_CONTENT_OVERDRAW_SIZE) * eScrollBarType);
-        UWORD uwReDrawYPos = (isOpening ? wMinYPos + uwScrollBarHeightOffset : pYPos->wCurrent + SCROLL_CONTENT_OVERDRAW_SIZE - (SCROLL_CONTENT_OVERDRAW_SIZE * eScrollBarType));
-        UWORD uwScrollHeightToDraw = (isOpening ? SCROLLS_Y_SPEED + SCROLL_CONTENT_OVERDRAW_SIZE : SCROLL_CONTENT_OVERDRAW_SIZE);
+    // Lets draw exposed content
+    if (
+        ((pYPos->wCurrent < pYPos->wLast) && (eScrollBarType == SCROLL_BAR_TOP)) ||
+        ((pYPos->wLast < pYPos->wCurrent) && (eScrollBarType == SCROLL_BAR_BOTTOM))
+    ) {
+        UWORD uwScrollBarHeightOffset = SCROLL_BAR_HEIGHT - (SCROLL_BAR_HEIGHT * eScrollBarType);
+        UWORD uwReDrawYPos = wMinYPos + uwScrollBarHeightOffset;
 
         // Draw newly exposed scroll content
         blitCopyAligned(
-            s_ppScrollsContentBitMap[eScrollType], 0, uwReDrawYPos - SCROLL_CONTENT_TO_SCREEN_Y_OFFSET,
+            g_ppScrollsContentBitMap[eScrollType], 0, uwReDrawYPos - SCROLL_CONTENT_TO_SCREEN_Y_OFFSET,
             g_pMenuBuffer->pBack, pXPos->wLast + SCROLL_EDGE_WIDTH, uwReDrawYPos,
-            pScroll->uwContentWidth, uwScrollHeightToDraw
+            pScroll->uwContentWidth, uwYPosDiff
         );
 
         UWORD uwScrollEdgeBitMapOffset = SCROLL_BAR_HEIGHT * SCROLL_COUNT * SCROLL_BAR_COUNT;
@@ -313,7 +307,7 @@ void scrollsDrawYAnimation(tScrollType eScrollType, tScrollBarType eScrollBarTyp
         blitCopyMask(
             s_pScrollsBitMap, (SCROLL_EDGE_WIDTH * eScrollType * 2), uwReDrawYPos - SCROLL_CONTENT_TO_SCREEN_Y_OFFSET + uwScrollEdgeBitMapOffset,
             g_pMenuBuffer->pBack, pXPos->wLast, uwReDrawYPos,
-            SCROLL_EDGE_WIDTH, uwScrollHeightToDraw,
+            SCROLL_EDGE_WIDTH, uwYPosDiff,
             (const UWORD *) s_pScrollsMaskBitMap->Planes[0]
         );
 
@@ -321,7 +315,7 @@ void scrollsDrawYAnimation(tScrollType eScrollType, tScrollBarType eScrollBarTyp
         blitCopyMask(
             s_pScrollsBitMap, (SCROLL_EDGE_WIDTH * eScrollType * 2) + SCROLL_EDGE_WIDTH, uwReDrawYPos - SCROLL_CONTENT_TO_SCREEN_Y_OFFSET + uwScrollEdgeBitMapOffset,
             g_pMenuBuffer->pBack, pXPos->wLast + pScroll->uwContentWidth + SCROLL_EDGE_WIDTH, uwReDrawYPos,
-            SCROLL_EDGE_WIDTH, uwScrollHeightToDraw,
+            SCROLL_EDGE_WIDTH, uwYPosDiff,
             (const UWORD *) s_pScrollsMaskBitMap->Planes[0]
         );
     }
@@ -353,42 +347,37 @@ void scrollsDraw(void) {
 
 void scrollsProcessDrawOrder(void) {
     // To optimize drawing speeds, we want to reduce blits per one frame to single scroll bar
-    // s_eScrollBarDrawTurn += 1;
+    s_eScrollBarDrawTurn += 1;
 
-    // if (s_eScrollBarDrawTurn == SCROLL_BAR_COUNT) {
-    //     s_eScrollBarDrawTurn %= SCROLL_BAR_COUNT;
+    if (s_eScrollBarDrawTurn == SCROLL_BAR_COUNT) {
+        s_eScrollBarDrawTurn %= SCROLL_BAR_COUNT;
 
-        // s_eScrollDrawTurn = (s_eScrollDrawTurn + 1) % SCROLL_COUNT;
-    // }
+        s_eScrollDrawTurn = (s_eScrollDrawTurn + 1) % SCROLL_COUNT;
+    }
 }
 
-// void scrollsDrawAll(void) {
-//     for (UBYTE ubScroll = SCROLL_LEFT; ubScroll < SCROLL_COUNT; ++ubScroll) {
-//         for (UBYTE ubScrollBar = SCROLL_BAR_TOP; ubScrollBar < SCROLL_BAR_COUNT; ++ubScrollBar) {
-//             scrollsDrawYAnimation(ubScroll, ubScrollBar);
-//         }
-//     }
-// }
+UBYTE scrollsRequestState(tScrollType eScrollType, tScrollState eScrollState) {
+    if (scrollIsScrollAnimationComplete(eScrollType)) {
+        // Animation is complete, lets check if we're at requested state
+        if (s_pScrollsData[eScrollType].eState == eScrollState) {
+            return TRUE;
+        }
 
-void scrollsProcess(void) {
-    scrollsAnimatePos();
-
-    scrollsDraw();
-
-    scrollsProcessDrawOrder();
-}
-
-BYTE scrollsRequestStage(tScrollType eScrollType, tScrollStage eScrollStage) {
-    if (s_pScrollsData[eScrollType].eStage == eScrollStage) {
-        // Target stage is either in progress or already prepared
-        return !scrollIsScrollAnimationInProgress(eScrollType);
+        // Animation is complete, but we're not at requested state, lets take current state closer to requested state
+        scrollsSetTarget(eScrollType, s_pScrollsData[eScrollType].eState + CMP(eScrollState, s_pScrollsData[eScrollType].eState));
     }
 
-    // Target stage is higher or lower than current stage, if we can, lets advance current stage closer to target
-    if (!scrollIsScrollAnimationInProgress(eScrollType)) {
-        scrollsMoveTo(eScrollType, s_pScrollsData[eScrollType].eStage + CMP(eScrollStage, s_pScrollsData[eScrollType].eStage));
+    // Lets process animation closer to target
+    {
+        scrollsAnimatePos();
+        scrollsDraw();
+        scrollsProcessDrawOrder();
     }
 
-    // Current stage is animating, let's wait for animation completion
+    // Current state is animating, let's wait for animation completion
     return FALSE;
+}
+
+void scrollsSetContentHeight(tScrollType eScrollType, UWORD uwContentHeight) {
+    s_pScrollsData[eScrollType].uwContentHeight = uwContentHeight;
 }

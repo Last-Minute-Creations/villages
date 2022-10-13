@@ -1,5 +1,7 @@
 #include "gamestates/menu/actions.h"
 
+#include <ace/managers/key.h>
+#include <ace/managers/mouse.h>
 #include <ace/managers/blit.h>
 
 #include "game.h"
@@ -15,8 +17,7 @@
 
 /* Statics */
 
-static tMenuAction s_eQueuedMenuAction = MENU_ACTION_NONE;
-static void (*s_pMenuActions[MENU_ACTION_COUNT])(void);
+static void (*s_pAction)(void);
 
 static char *s_szSplashPrompt = "Click To Continue";
 static tUwCoordYX s_sSplashPromptPos = {
@@ -26,41 +27,78 @@ static tUwCoordYX s_sSplashPromptPos = {
 
 /* Functions */
 
-tMenuAction gsMenuGetQueuedMenuAction() {
-	return s_eQueuedMenuAction;
+void actionExitGame(void) {
+	logWrite("actionExitGame");
+
+	if (!fadeRequestState(FADE_STATE_OUT)) {
+		return;
+	}
+
+	statePopAll(g_pStateManager);
 }
 
-void gsMenuSetQueuedMenuAction(tMenuAction eMenuAction, UBYTE ubUseFadeOut) {
-	s_eQueuedMenuAction = eMenuAction;
+void actionSplashPromtDraw(void);
 
-	if (ubUseFadeOut) {
-		fadeMorphTo(FADE_TARGET_OUT);
+void actionsMainMenuClose(void) {
+	logWrite("actionsMainMenuClose");
+
+	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_HIDDEN)) {
+		return;
+	}
+
+	s_pAction = actionSplashPromtDraw;
+}
+
+void actionMainMenuCheckForNewActions(void) {
+	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_OPEN)) {
+		return;
+	}
+
+	if (keyUse(KEY_ESCAPE)) {
+		s_pAction = actionsMainMenuClose;
 	}
 }
 
-void gsMenuCallQueuedMenuAction(void) {
-	tMenuAction eMenuAction = s_eQueuedMenuAction;
+void actionMainMenuStart(void) {
+	logWrite("actionMainMenuStart");
 
-	gsMenuCallMenuAction(s_eQueuedMenuAction);
+	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_CLOSED)) {
+		return;
+	}
 
-	if (s_eQueuedMenuAction == eMenuAction) {
-		s_eQueuedMenuAction = MENU_ACTION_NONE;
+	scrollsSetContentHeight(SCROLL_RIGHT, 100);
+
+	s_pAction = actionMainMenuCheckForNewActions;
+}
+
+void actionSplashPromtUndraw(void) {
+	logWrite("actionSplashPromtUndraw");
+
+	tUwCoordYX sTextSize = fontMeasureText(g_pFont, s_szSplashPrompt);
+	sTextSize.uwX = ceilToFactor(sTextSize.uwX, 16);
+
+	blitCopyAligned(
+		g_pSplashBitMap, s_sSplashPromptPos.uwX - (sTextSize.uwX >> 1), s_sSplashPromptPos.uwY,
+		g_pMenuBuffer->pBack, s_sSplashPromptPos.uwX - (sTextSize.uwX >> 1), s_sSplashPromptPos.uwY,
+		sTextSize.uwX, sTextSize.uwY
+	);
+
+	s_pAction = actionMainMenuStart;
+}
+
+void actionSplashCheckForNewActions(void) {
+	if (mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
+		s_pAction = actionSplashPromtUndraw;
 	}
 }
 
-void gsMenuCallMenuAction(tMenuAction eMenuAction) {
-	s_pMenuActions[eMenuAction]();
-}
+void actionSplashPromtDraw(void) {
+	logWrite("actionSplashPromtDraw");
 
-void gsMenuActionExit(void) {
-	statePop(g_pStateManager);
-}
+	if (!fadeRequestState(FADE_STATE_IN)) {
+		return;
+	}
 
-void gsMenuActionShowSlpash(void) {
-	stateChange(&g_sMenuStateManager, &g_sMenuStateSplash);
-}
-
-void gsMenuActionDrawSplashPromt(void) {
 	fontDrawStr(
 		g_pFont,
 		g_pMenuBuffer->pBack,
@@ -68,31 +106,29 @@ void gsMenuActionDrawSplashPromt(void) {
 		s_sSplashPromptPos.uwY,
 		s_szSplashPrompt,
 		30,
-		FONT_CENTER | FONT_COOKIE | FONT_SHADOW,
+		FONT_HCENTER | FONT_COOKIE | FONT_SHADOW,
 		g_pTextBitMap
 	);
+
+	s_pAction = actionSplashCheckForNewActions;
 }
 
-void gsMenuActionUndrawSplashPromt(void) {
-	tUwCoordYX sTextSize = fontMeasureText(g_pFont, s_szSplashPrompt);
-	sTextSize.uwX = ceilToFactor(sTextSize.uwX, 16);
-	sTextSize.uwY = ceilToFactor(sTextSize.uwY, 16);
+void actionSplashStart(void) {
+	logWrite("actionSplashStart");
 
 	blitCopyAligned(
-		g_pSplashBitMap, s_sSplashPromptPos.uwX - (sTextSize.uwX >> 1), s_sSplashPromptPos.uwY,
-		g_pMenuBuffer->pBack, s_sSplashPromptPos.uwX - (sTextSize.uwX >> 1), s_sSplashPromptPos.uwY,
-		sTextSize.uwX, sTextSize.uwY
+		g_pSplashBitMap, 0, 0,
+		g_pMenuBuffer->pBack, 0, 0,
+		GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT
 	);
+
+	s_pAction = actionSplashPromtDraw;
 }
 
-void gsMenuActionShowMainMenu(void) {
-	stateChange(&g_sMenuStateManager, &g_sMenuStateSplash);
+void actionsInit(void) {
+	s_pAction = actionSplashStart;
 }
 
-static void (*s_pMenuActions[MENU_ACTION_COUNT])(void) = {
-	[MENU_ACTION_SHOW_SLPASH] = gsMenuActionShowSlpash,
-	[MENU_ACTION_DRAW_SPLASH_PROMPT] = gsMenuActionDrawSplashPromt,
-	[MENU_ACTION_UNDRAW_SPLASH_PROMPT] = gsMenuActionUndrawSplashPromt,
-	[MENU_ACTION_SHOW_MAIN_MENU] = gsMenuActionShowMainMenu,
-	[MENU_ACTION_EXIT] = gsMenuActionExit,
-};
+void actionsProcess(void) {
+	s_pAction();
+}
