@@ -41,7 +41,4 @@ void scrollsProcess(void);
  */
 BYTE scrollsRequestStage(tScrollType eScrollType, tScrollStage eScrollStage);
 
-// FIXME: Remove as it will be not used in final form
-void scrollsDrawAll(void);
-
 #endif // GUARD_GAMESTATE_MENU_SCROLLS_H

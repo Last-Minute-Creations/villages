@@ -135,9 +135,9 @@ void gsMenuSplashLoop(void) {
 		return;
 	}
 
-	// if (keyUse(KEY_SPACE)) {
+	if (keyUse(KEY_SPACE)) {
 		scrollsProcess();
-	// }
+	}
 
 	if (gsMenuGetQueuedMenuAction() != MENU_ACTION_NONE) {
 		gsMenuCallQueuedMenuAction();
@@ -159,18 +159,18 @@ void gsMenuSplashLoop(void) {
 		}
 	}
 
-	if (bDirRight) {
-		if (scrollsRequestStage(SCROLL_RIGHT, SCROLL_STAGE_OPEN)) {
-			logWrite("Right log opened!");
-			bDirRight = 0;
-		}
-	}
-	else {
-		if (scrollsRequestStage(SCROLL_RIGHT, SCROLL_STAGE_CLOSED)) {
-			logWrite("Right log closed!");
-			bDirRight = 1;
-		}
-	}
+	// if (bDirRight) {
+	// 	if (scrollsRequestStage(SCROLL_RIGHT, SCROLL_STAGE_OPEN)) {
+	// 		logWrite("Right log opened!");
+	// 		bDirRight = 0;
+	// 	}
+	// }
+	// else {
+	// 	if (scrollsRequestStage(SCROLL_RIGHT, SCROLL_STAGE_CLOSED)) {
+	// 		logWrite("Right log closed!");
+	// 		bDirRight = 1;
+	// 	}
+	// }
 }
 
 void gsMenuSplashDestroy(void) {

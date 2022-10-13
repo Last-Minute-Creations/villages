@@ -71,8 +71,6 @@ void gsMenuActionDrawSplashPromt(void) {
 		FONT_CENTER | FONT_COOKIE | FONT_SHADOW,
 		g_pTextBitMap
 	);
-
-	scrollsDrawAll();
 }
 
 void gsMenuActionUndrawSplashPromt(void) {
