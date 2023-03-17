@@ -10,6 +10,7 @@
 
 #include "gamestates/menu/menu.h"
 #include "gamestates/menu/scrolls.h"
+#include "gamestates/menu/items.h"
 
 /* Types */
 
@@ -37,8 +38,6 @@ void actionExitGame(void) {
 	statePopAll(g_pStateManager);
 }
 
-void actionSplashPromtDraw(void);
-
 void actionsMainMenuClose(void) {
 	logWrite("actionsMainMenuClose");
 
@@ -46,7 +45,7 @@ void actionsMainMenuClose(void) {
 		return;
 	}
 
-	s_pAction = actionSplashPromtDraw;
+	actionsSetTo(actionSplashPromtDraw);
 }
 
 void actionMainMenuCheckForNewActions(void) {
@@ -55,8 +54,10 @@ void actionMainMenuCheckForNewActions(void) {
 	}
 
 	if (keyUse(KEY_ESCAPE)) {
-		s_pAction = actionsMainMenuClose;
+		actionsSetTo(actionsMainMenuClose);
 	}
+
+	menuItemMainMenuProcess();
 }
 
 void actionMainMenuStart(void) {
@@ -66,9 +67,9 @@ void actionMainMenuStart(void) {
 		return;
 	}
 
-	scrollsSetContentHeight(SCROLL_RIGHT, 100);
+	menuItemMainMenuDraw();
 
-	s_pAction = actionMainMenuCheckForNewActions;
+	actionsSetTo(actionMainMenuCheckForNewActions);
 }
 
 void actionSplashPromtUndraw(void) {
@@ -83,12 +84,16 @@ void actionSplashPromtUndraw(void) {
 		sTextSize.uwX, sTextSize.uwY
 	);
 
-	s_pAction = actionMainMenuStart;
+	actionsSetTo(actionMainMenuStart);
 }
 
 void actionSplashCheckForNewActions(void) {
+	if (keyUse(KEY_ESCAPE)) {
+		actionsSetTo(actionExitGame);
+	}
+
 	if (mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
-		s_pAction = actionSplashPromtUndraw;
+		actionsSetTo(actionSplashPromtUndraw);
 	}
 }
 
@@ -110,7 +115,7 @@ void actionSplashPromtDraw(void) {
 		g_pTextBitMap
 	);
 
-	s_pAction = actionSplashCheckForNewActions;
+	actionsSetTo(actionSplashCheckForNewActions);
 }
 
 void actionSplashStart(void) {
@@ -122,13 +127,17 @@ void actionSplashStart(void) {
 		GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT
 	);
 
-	s_pAction = actionSplashPromtDraw;
+	actionsSetTo(actionSplashPromtDraw);
 }
 
 void actionsInit(void) {
-	s_pAction = actionSplashStart;
+	actionsSetTo(actionSplashStart);
 }
 
 void actionsProcess(void) {
 	s_pAction();
+}
+
+void actionsSetTo(void (*pAction)(void)) {
+	s_pAction = pAction;
 }

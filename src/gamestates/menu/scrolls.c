@@ -1,7 +1,6 @@
 #include "gamestates/menu/scrolls.h"
 
 #include <ace/managers/log.h>
-#include <ace/utils/bitmap.h>
 #include <ace/managers/key.h>
 
 #include "game.h"
@@ -10,37 +9,6 @@
 #include "gamestates/menu/menu.h"
 
 /* Types */
-
-#define SCROLLS_MARGIN 16
-#define SCROLLS_X_SPEED 16
-#define SCROLLS_Y_SPEED 16
-
-#define SCROLL_LEFT_WIDTH 144
-#define SCROLL_RIGHT_WIDTH 128
-
-#define SCROLL_EDGE_WIDTH 16
-#define SCROLL_EDGE_HEIGHT 192
-
-#define SCROLL_BAR_HEIGHT 16
-
-#define SCROLL_BAR_TOP_OPEN_Y_POS SCROLLS_MARGIN
-#define SCROLL_BAR_TOP_CLOSED_Y_POS ((GAME_SCREEN_HEIGHT / 2) - SCROLL_BAR_HEIGHT)
-
-#define SCROLL_BAR_BOTTOM_OPEN_Y_POS (GAME_SCREEN_HEIGHT - SCROLLS_MARGIN - SCROLL_BAR_HEIGHT)
-#define SCROLL_BAR_BOTTOM_CLOSED_Y_POS (GAME_SCREEN_HEIGHT / 2)
-
-#define SCROLL_CONTENT_COLOR_INDEX 14
-#define SCROLL_CONTENT_TO_SCREEN_Y_OFFSET (SCROLL_BAR_TOP_OPEN_Y_POS + SCROLL_BAR_HEIGHT)
-
-#define SCROLL_LEFT_CONTENT_WIDTH (SCROLL_LEFT_WIDTH - (SCROLL_EDGE_WIDTH * 2))
-// FIXME: Rollback after https://github.com/AmigaPorts/ACE/issues/162 is fixed
-// #define SCROLL_LEFT_HIDDEN_X_POS -SCROLL_LEFT_WIDTH
-#define SCROLL_LEFT_HIDDEN_X_POS GAME_SCREEN_WIDTH
-#define SCROLL_LEFT_OPEN_X_POS SCROLLS_MARGIN
-
-#define SCROLL_RIGHT_CONTENT_WIDTH (SCROLL_RIGHT_WIDTH - (SCROLL_EDGE_WIDTH * 2))
-#define SCROLL_RIGHT_HIDDEN_X_POS GAME_SCREEN_WIDTH
-#define SCROLL_RIGHT_OPEN_X_POS (GAME_SCREEN_WIDTH - SCROLLS_MARGIN - SCROLL_RIGHT_WIDTH)
 
 typedef enum _tScrollBarType {
     SCROLL_BAR_TOP,
@@ -134,6 +102,8 @@ void scrollsCreate(void) {
     for (tScrollType eScrollTye = SCROLL_LEFT; eScrollTye < SCROLL_COUNT; ++eScrollTye) {
         g_ppScrollsContentBitMap[eScrollTye] = bitmapCreate(s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, GAME_BPP, 0);
         blitRect(g_ppScrollsContentBitMap[eScrollTye], 0, 0, s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, SCROLL_CONTENT_COLOR_INDEX);
+        blitLine(g_ppScrollsContentBitMap[eScrollTye], 0, 0, s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, 0, 0xFFFF, TRUE);
+        blitLine(g_ppScrollsContentBitMap[eScrollTye], s_pScrollsData[eScrollTye].uwContentWidth, 0, 0, SCROLL_EDGE_HEIGHT, 0, 0xFFFF, TRUE);
     }
 
     logBlockEnd("scrollsCreate()");
@@ -192,7 +162,7 @@ UBYTE scrollsIsScrollBarDrawXOutdated(tScrollType eScrollType) {
     return s_pScrollsData[eScrollType].sXPos.wCurrent != s_pScrollsData[eScrollType].sXPos.wLast;
 }
 
-UBYTE scrollIsScrollAnimationComplete(tScrollType eScrollType) {
+UBYTE scrollsIsScrollAnimationComplete(tScrollType eScrollType) {
     tScrollData *pScroll = &s_pScrollsData[eScrollType];
     tScrollPos *pXPos = &pScroll->sXPos;
 
@@ -357,7 +327,7 @@ void scrollsProcessDrawOrder(void) {
 }
 
 UBYTE scrollsRequestState(tScrollType eScrollType, tScrollState eScrollState) {
-    if (scrollIsScrollAnimationComplete(eScrollType)) {
+    if (scrollsIsScrollAnimationComplete(eScrollType)) {
         // Animation is complete, lets check if we're at requested state
         if (s_pScrollsData[eScrollType].eState == eScrollState) {
             return TRUE;
@@ -378,6 +348,28 @@ UBYTE scrollsRequestState(tScrollType eScrollType, tScrollState eScrollState) {
     return FALSE;
 }
 
+UWORD scrollsGetContentHeight(tScrollType eScrollType) {
+    return s_pScrollsData[eScrollType].uwContentHeight;
+}
+
 void scrollsSetContentHeight(tScrollType eScrollType, UWORD uwContentHeight) {
     s_pScrollsData[eScrollType].uwContentHeight = uwContentHeight;
+}
+
+UWORD scrollsGetContentWidth(tScrollType eScrollType) {
+    return s_pScrollsData[eScrollType].uwContentWidth;
+}
+
+tUwCoordYX scrollsCoordsFromLocalToGlobal(tScrollType eScrollType, tUwCoordYX sLocalCoords) {
+    sLocalCoords.uwX += ((eScrollType == SCROLL_LEFT) ? SCROLL_LEFT_OPEN_X_POS : SCROLL_RIGHT_OPEN_X_POS) + SCROLL_EDGE_WIDTH;
+    sLocalCoords.uwY += SCROLL_BAR_TOP_OPEN_Y_POS + SCROLL_BAR_HEIGHT;
+
+    return sLocalCoords;
+}
+
+tUwCoordYX scrollsCoordsFromGlobalToLocal(tScrollType eScrollType, tUwCoordYX sGlobalCoords) {
+    sGlobalCoords.uwX -= ((eScrollType == SCROLL_LEFT) ? SCROLL_LEFT_OPEN_X_POS : SCROLL_RIGHT_OPEN_X_POS) + SCROLL_EDGE_WIDTH;
+    sGlobalCoords.uwY -= SCROLL_BAR_TOP_OPEN_Y_POS + SCROLL_BAR_HEIGHT;
+
+    return sGlobalCoords;
 }

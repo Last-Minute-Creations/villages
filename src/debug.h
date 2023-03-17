@@ -2,6 +2,7 @@
 #define GUARD_DEBUG_H
 
 #include <ace/types.h>
+#include <ace/utils/bitmap.h>
 
 /* Types */
 
@@ -12,5 +13,7 @@
 void debugToggle(void);
 
 void debugSetColor(UWORD uwColor);
+
+void debugDrawBox(tBitMap *pBuffer, tUwRect sBoxRect);
 
 #endif // GUARD_DEBUG_H
