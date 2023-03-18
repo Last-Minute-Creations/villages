@@ -3,20 +3,27 @@
 
 /* Types */
 
+typedef enum _tActionState {
+    ACTION_STATE_KEEP_RUNNING,
+    ACTION_STATE_ADVANCE,
+} tActionState;
+
+typedef tActionState (*tActionPtr)(void);
+
 /* Globals */
 
 /* Functions */
 
-void actionExitGame(void);
+tActionState actionExitGame(void);
 
-void actionsMainMenuClose(void);
+tActionState actionMainMenuClose(void);
 
-void actionSplashPromtDraw(void);
+tActionState actionSplashPromtDraw(void);
 
 void actionsInit(void);
 
 void actionsProcess(void);
 
-void actionsSetTo(void (*pAction)(void));
+void actionsQueue(tActionPtr pAction);
 
 #endif // GUARD_GAMESTATE_MENU_ACTIONS_H

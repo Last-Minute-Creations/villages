@@ -14,7 +14,6 @@
 
 typedef struct _tMenuItem {
 	char *szText;
-	void (*pAction)(void);
 	tUwRect sButtonRect;
 	UBYTE ubIsHovered;
 } tMenuItem;
@@ -23,10 +22,9 @@ typedef struct _tMenuItem {
 
 /* Statics */
 
-tMenuItem s_pMainMenuItems[] = {
+static tMenuItem s_pMainMenuItems[] = {
 	{
 		.szText = "New Game",
-		.pAction = actionsMainMenuClose,
 		.sButtonRect = {
 			.uwX = 0,
 			.uwY = 0,
@@ -37,7 +35,6 @@ tMenuItem s_pMainMenuItems[] = {
 	},
 	{
 		.szText = "How To Play?",
-		.pAction = actionsMainMenuClose,
 		.sButtonRect = {
 			.uwX = 0,
 			.uwY = 0,
@@ -48,7 +45,16 @@ tMenuItem s_pMainMenuItems[] = {
 	},
 	{
 		.szText = "Credits",
-		.pAction = actionsMainMenuClose,
+		.sButtonRect = {
+			.uwX = 0,
+			.uwY = 0,
+			.uwWidth = 0,
+			.uwHeight = 0,
+		},
+		.ubIsHovered = 0,
+	},
+	{
+		.szText = "Quit",
 		.sButtonRect = {
 			.uwX = 0,
 			.uwY = 0,
@@ -59,7 +65,7 @@ tMenuItem s_pMainMenuItems[] = {
 	},
 };
 
-UBYTE s_ubMainMenuItemsCount = sizeof(s_pMainMenuItems) / sizeof(s_pMainMenuItems[0]);
+static UBYTE s_ubMainMenuItemsCount = sizeof(s_pMainMenuItems) / sizeof(s_pMainMenuItems[0]);
 
 /* Functions */
 
@@ -77,7 +83,7 @@ void menuItemMainMenuDraw(void) {
 		tUwCoordYX sTextDimensions = fontMeasureText(g_pFont, pMenuItem->szText);
 		tUwCoordYX sTextLocalCoords = {
 			.uwX = (scrollsGetContentWidth(SCROLL_RIGHT) / 2) - (sTextDimensions.uwX / 2),
-			.uwY = (MENU_ITEMS_SPACING / 2) + (SCROLL_EDGE_HEIGHT / 2) - (uwScrollContentHeight / 2) + ((g_pFont->uwHeight + MENU_ITEMS_SPACING) * ubItemIndex),
+			.uwY = MENU_ITEMS_SPACING + (SCROLL_EDGE_HEIGHT / 2) - (uwScrollContentHeight / 2) + ((g_pFont->uwHeight + MENU_ITEMS_SPACING) * ubItemIndex),
 		};
 		tUwCoordYX sTextGlobalCoords = scrollsCoordsFromLocalToGlobal(SCROLL_RIGHT, sTextLocalCoords);
 
@@ -112,7 +118,7 @@ void menuItemMainMenuDraw(void) {
 	}
 }
 
-void menuItemMainMenuProcess(void) {
+UBYTE menuItemMainMenuProcess(void) {
 	for (UBYTE ubItemIndex = 0; ubItemIndex < s_ubMainMenuItemsCount; ++ubItemIndex) {
 		tMenuItem *pMenuItem = &s_pMainMenuItems[ubItemIndex];
 
@@ -138,8 +144,9 @@ void menuItemMainMenuProcess(void) {
 		}
 
 		if (ubIsHovered && mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
-			actionsSetTo(pMenuItem->pAction);
-			return;
+			return ubItemIndex;
 		}
 	}
+
+	return 4;
 }
