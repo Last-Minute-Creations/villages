@@ -11,6 +11,8 @@
 /* Types */
 
 #define MENU_ITEMS_SPACING 8
+#define MENU_ITEMS_TEXT_COLOR_INDEX 8
+#define MENU_ITEMS_TEXT_HOVERED_COLOR_INDEX 22
 
 typedef struct _tMenuItem {
 	char *szText;
@@ -70,7 +72,7 @@ static UBYTE s_ubMainMenuItemsCount = sizeof(s_pMainMenuItems) / sizeof(s_pMainM
 /* Functions */
 
 UBYTE menuItemGetTextColor(UBYTE ubIsHovered) {
-	return ubIsHovered ? 1 : 0;
+	return ubIsHovered ? MENU_ITEMS_TEXT_HOVERED_COLOR_INDEX : MENU_ITEMS_TEXT_COLOR_INDEX;
 }
 
 void menuItemMainMenuDraw(void) {
@@ -87,7 +89,6 @@ void menuItemMainMenuDraw(void) {
 		};
 		tUwCoordYX sTextGlobalCoords = scrollsCoordsFromLocalToGlobal(SCROLL_RIGHT, sTextLocalCoords);
 
-		pMenuItem->ubIsHovered = FALSE;
 		pMenuItem->sButtonRect = (tUwRect) {
 			.uwX = sTextGlobalCoords.uwX,
 			.uwY = sTextGlobalCoords.uwY,
@@ -102,7 +103,7 @@ void menuItemMainMenuDraw(void) {
 			sTextLocalCoords.uwX,
 			sTextLocalCoords.uwY,
 			pMenuItem->szText,
-			menuItemGetTextColor(FALSE),
+			menuItemGetTextColor(pMenuItem->ubIsHovered),
 			FONT_COOKIE,
 			g_pTextBitMap
 		);

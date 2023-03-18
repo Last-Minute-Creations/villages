@@ -2,6 +2,7 @@
 
 #include <ace/types.h>
 #include <ace/utils/custom.h>
+#include <ace/managers/blit.h>
 
 /* Types */
 

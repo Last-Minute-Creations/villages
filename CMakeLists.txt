@@ -33,10 +33,17 @@ target_compile_options(${VILLAGES_EXECUTABLE} PUBLIC -Wall)
 target_link_libraries(${VILLAGES_EXECUTABLE} ace)
 if(GAME_DEBUG)
 	target_compile_definitions(${VILLAGES_EXECUTABLE} PRIVATE GAME_DEBUG)
+endif()
+if(ACE_DEBUG)
 	target_compile_definitions(ace PUBLIC ACE_DEBUG ACE_DEBUG_UAE)
 endif()
 
 set(RES_DIR ${CMAKE_CURRENT_LIST_DIR}/res)
+if(GAME_DEBUG)
+	set(BITMAP_DIR ${CMAKE_CURRENT_LIST_DIR}/res/bitmaps/debug)
+else()
+	set(BITMAP_DIR ${CMAKE_CURRENT_LIST_DIR}/res/bitmaps/release)
+endif()
 set(DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
 
 # Directory preparation
@@ -46,7 +53,7 @@ file(
 	${DATA_DIR}/palettes
 	${DATA_DIR}/cursors
 	${DATA_DIR}/fonts
-	${DATA_DIR}/debug
+	${DATA_DIR}/bitmaps
 )
 
 file(GLOB RES_FILES ${RES_DIR}/*)
@@ -70,12 +77,12 @@ convertBitmaps(
 convertBitmaps(
 	TARGET ${VILLAGES_EXECUTABLE} PALETTE ${PLT_PATH} MASK_COLOR ${TRANSPARENCY_HEX}
 	SOURCES
-		${RES_DIR}/debug/splash.png
-		${RES_DIR}/debug/scrolls.png
+		${BITMAP_DIR}/splash.png
+		${BITMAP_DIR}/scrolls.png
 	DESTINATIONS
-		${DATA_DIR}/debug/splash.bm
-		${DATA_DIR}/debug/scrolls.bm
+		${DATA_DIR}/bitmaps/splash.bm
+		${DATA_DIR}/bitmaps/scrolls.bm
 	MASKS
-		${DATA_DIR}/debug/splash_mask.bm
-		${DATA_DIR}/debug/scrolls_mask.bm
+		${DATA_DIR}/bitmaps/splash_mask.bm
+		${DATA_DIR}/bitmaps/scrolls_mask.bm
 )

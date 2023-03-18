@@ -68,6 +68,18 @@ tActionState actionCloseRightScroll(void) {
 	return ACTION_STATE_ADVANCE;
 }
 
+tActionState actionMainMenuStart(void) {
+	logWrite("actionMainMenuStart");
+
+	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_CLOSED)) {
+		return ACTION_STATE_KEEP_RUNNING;
+	}
+
+	menuItemMainMenuDraw();
+
+	return ACTION_STATE_ADVANCE;
+}
+
 tActionState actionMainMenuCheckForNewActions(void) {
 	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_OPEN)) {
 		return ACTION_STATE_KEEP_RUNNING;
@@ -82,15 +94,15 @@ tActionState actionMainMenuCheckForNewActions(void) {
 
 	switch (menuItemMainMenuProcess()) {
 		case 0: // New game
-			actionsQueue(actionCloseRightScroll);
+			actionsQueue(actionMainMenuStart);
 			actionsQueue(actionMainMenuCheckForNewActions);
 			return ACTION_STATE_ADVANCE;
 		case 1: // How to play?
-			actionsQueue(actionCloseRightScroll);
+			actionsQueue(actionMainMenuStart);
 			actionsQueue(actionMainMenuCheckForNewActions);
 			return ACTION_STATE_ADVANCE;
 		case 2: // Credits
-			actionsQueue(actionCloseRightScroll);
+			actionsQueue(actionMainMenuStart);
 			actionsQueue(actionMainMenuCheckForNewActions);
 			return ACTION_STATE_ADVANCE;
 		case 3: // Quit
@@ -100,18 +112,6 @@ tActionState actionMainMenuCheckForNewActions(void) {
 	}
 
 	return ACTION_STATE_KEEP_RUNNING;
-}
-
-tActionState actionMainMenuStart(void) {
-	logWrite("actionMainMenuStart");
-
-	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_CLOSED)) {
-		return ACTION_STATE_KEEP_RUNNING;
-	}
-
-	menuItemMainMenuDraw();
-
-	return ACTION_STATE_ADVANCE;
 }
 
 tActionState actionSplashPromtUndraw(void) {

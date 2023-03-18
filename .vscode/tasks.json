@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "cmake debug",
+            "label": "cmake debug all",
             "type": "shell",
             "command": "cmake",
             "group": "build",
@@ -19,7 +19,7 @@
             "problemMatcher": [],
         },
         {
-            "label": "cmake release",
+            "label": "cmake debug game",
             "type": "shell",
             "command": "cmake",
             "group": "build",
@@ -27,6 +27,36 @@
                 "..",
                 "-DACE_DEBUG=OFF",
                 "-DGAME_DEBUG=ON"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/build",
+            },
+            "problemMatcher": [],
+        },
+        {
+            "label": "cmake debug ace",
+            "type": "shell",
+            "command": "cmake",
+            "group": "build",
+            "args": [
+                "..",
+                "-DACE_DEBUG=ON",
+                "-DGAME_DEBUG=OFF"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/build",
+            },
+            "problemMatcher": [],
+        },
+        {
+            "label": "cmake release",
+            "type": "shell",
+            "command": "cmake",
+            "group": "build",
+            "args": [
+                "..",
+                "-DACE_DEBUG=OFF",
+                "-DGAME_DEBUG=OFF"
             ],
             "options": {
                 "cwd": "${workspaceFolder}/build",

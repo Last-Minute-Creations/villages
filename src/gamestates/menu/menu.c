@@ -49,7 +49,7 @@ void gsMenuCreate(void) {
 		TAG_DONE
 	);
 
-	g_pSplashBitMap = bitmapCreateFromFile("data/debug/splash.bm", TRUE);
+	g_pSplashBitMap = bitmapCreateFromFile("data/bitmaps/splash.bm", TRUE);
 	scrollsCreate();
 
 	viewLoad(g_pView);

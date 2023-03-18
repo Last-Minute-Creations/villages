@@ -96,14 +96,16 @@ static tScrollBarType s_eScrollBarDrawTurn = SCROLL_BAR_TOP;
 void scrollsCreate(void) {
     logBlockBegin("scrollsCreate()");
 
-    s_pScrollsBitMap = bitmapCreateFromFile("data/debug/scrolls.bm", FALSE);
-    s_pScrollsMaskBitMap = bitmapCreateFromFile("data/debug/scrolls_mask.bm", FALSE);
+    s_pScrollsBitMap = bitmapCreateFromFile("data/bitmaps/scrolls.bm", FALSE);
+    s_pScrollsMaskBitMap = bitmapCreateFromFile("data/bitmaps/scrolls_mask.bm", FALSE);
 
     for (tScrollType eScrollTye = SCROLL_LEFT; eScrollTye < SCROLL_COUNT; ++eScrollTye) {
         g_ppScrollsContentBitMap[eScrollTye] = bitmapCreate(s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, GAME_BPP, 0);
         blitRect(g_ppScrollsContentBitMap[eScrollTye], 0, 0, s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, SCROLL_CONTENT_COLOR_INDEX);
+#ifdef GAME_DEBUG
         blitLine(g_ppScrollsContentBitMap[eScrollTye], 0, 0, s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, 0, 0xFFFF, TRUE);
         blitLine(g_ppScrollsContentBitMap[eScrollTye], s_pScrollsData[eScrollTye].uwContentWidth, 0, 0, SCROLL_EDGE_HEIGHT, 0, 0xFFFF, TRUE);
+#endif
     }
 
     logBlockEnd("scrollsCreate()");
