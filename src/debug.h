@@ -6,6 +6,10 @@
 
 /* Types */
 
+#define DEBUG_COLOR_IDLE 0x000
+#define DEBUG_COLOR_GAME_LOGIC 0x800
+#define DEBUG_COLOR_MANAGER_LOGIC 0x080
+
 /* Globals */
 
 /* Functions */

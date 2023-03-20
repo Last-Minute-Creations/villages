@@ -62,7 +62,7 @@ void gsMenuCreate(void) {
 }
 
 void gsMenuLoop(void) {
-	debugSetColor(g_pMenuVPort->pPalette[0]);
+	debugSetColor(DEBUG_COLOR_IDLE);
 
 	if (keyUse(KEY_TAB)) {
 		debugToggle();
@@ -70,14 +70,14 @@ void gsMenuLoop(void) {
 
 	cursorUpdate();
 
-	debugSetColor(0x800);
+	debugSetColor(DEBUG_COLOR_GAME_LOGIC);
 	actionsProcess();
-	debugSetColor(0x008);
+	debugSetColor(DEBUG_COLOR_MANAGER_LOGIC);
 
 	viewProcessManagers(g_pView);
 	copProcessBlocks();
 
-	debugSetColor(g_pMenuVPort->pPalette[0]);
+	debugSetColor(DEBUG_COLOR_IDLE);
 	vPortWaitForEnd(g_pMenuVPort);
 }
 

@@ -99,12 +99,12 @@ void scrollsCreate(void) {
     s_pScrollsBitMap = bitmapCreateFromFile("data/bitmaps/scrolls.bm", FALSE);
     s_pScrollsMaskBitMap = bitmapCreateFromFile("data/bitmaps/scrolls_mask.bm", FALSE);
 
-    for (tScrollType eScrollTye = SCROLL_LEFT; eScrollTye < SCROLL_COUNT; ++eScrollTye) {
-        g_ppScrollsContentBitMap[eScrollTye] = bitmapCreate(s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, GAME_BPP, 0);
-        blitRect(g_ppScrollsContentBitMap[eScrollTye], 0, 0, s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, SCROLL_CONTENT_COLOR_INDEX);
+    for (tScrollType eScrollType = SCROLL_LEFT; eScrollType < SCROLL_COUNT; ++eScrollType) {
+        g_ppScrollsContentBitMap[eScrollType] = bitmapCreate(s_pScrollsData[eScrollType].uwContentWidth, SCROLL_EDGE_HEIGHT, GAME_BPP, 0);
+        scrollsDrawContentBaground(eScrollType);
 #ifdef GAME_DEBUG
-        blitLine(g_ppScrollsContentBitMap[eScrollTye], 0, 0, s_pScrollsData[eScrollTye].uwContentWidth, SCROLL_EDGE_HEIGHT, 0, 0xFFFF, TRUE);
-        blitLine(g_ppScrollsContentBitMap[eScrollTye], s_pScrollsData[eScrollTye].uwContentWidth, 0, 0, SCROLL_EDGE_HEIGHT, 0, 0xFFFF, TRUE);
+        blitLine(g_ppScrollsContentBitMap[eScrollType], 0, 0, s_pScrollsData[eScrollType].uwContentWidth, SCROLL_EDGE_HEIGHT, 0, 0xFFFF, TRUE);
+        blitLine(g_ppScrollsContentBitMap[eScrollType], s_pScrollsData[eScrollType].uwContentWidth, 0, 0, SCROLL_EDGE_HEIGHT, 0, 0xFFFF, TRUE);
 #endif
     }
 
@@ -114,8 +114,8 @@ void scrollsCreate(void) {
 void scrollsDestroy(void) {
     logBlockBegin("scrollsDestroy()");
 
-    for (tScrollType eScrollTye = SCROLL_LEFT; eScrollTye < SCROLL_COUNT; ++eScrollTye) {
-        bitmapDestroy(g_ppScrollsContentBitMap[eScrollTye]);
+    for (tScrollType eScrollType = SCROLL_LEFT; eScrollType < SCROLL_COUNT; ++eScrollType) {
+        bitmapDestroy(g_ppScrollsContentBitMap[eScrollType]);
     }
 
     bitmapDestroy(s_pScrollsMaskBitMap);
@@ -206,6 +206,8 @@ void scrollsDrawXAnimation(tScrollType eScrollType) {
         UWORD uwActualWidth = pScroll->uwWidth - wLeftOffscreenSize - wRightOffscreenSize;
 
         if (uwActualWidth) {
+            vPortWaitForPos(g_pMenuVPort, SCROLL_BAR_TOP_CLOSED_Y_POS + SCROLL_BAR_HEIGHT * 2, FALSE);
+
             blitCopy(
                 g_pSplashBitMap, pXPos->wLast + wLeftOffscreenSize, SCROLL_BAR_TOP_CLOSED_Y_POS,
                 g_pMenuBuffer->pBack, pXPos->wLast + wLeftOffscreenSize, SCROLL_BAR_TOP_CLOSED_Y_POS,
@@ -251,6 +253,8 @@ void scrollsDrawYAnimation(tScrollType eScrollType, tScrollBarType eScrollBarTyp
 
     // Due to transparency, draw background over last and current position
     {
+        vPortWaitForPos(g_pMenuVPort, wMinYPos + SCROLL_BAR_HEIGHT + uwYPosDiff, FALSE);
+
         blitCopyAligned(
             g_pSplashBitMap, pXPos->wLast, wMinYPos,
             g_pMenuBuffer->pBack, pXPos->wLast, wMinYPos,
@@ -309,12 +313,40 @@ void scrollsDrawYAnimation(tScrollType eScrollType, tScrollBarType eScrollBarTyp
 }
 
 void scrollsDraw(void) {
-    if (scrollsIsScrollBarDrawXOutdated(s_eScrollDrawTurn)) {
-        scrollsDrawXAnimation(s_eScrollDrawTurn);
+    if (scrollsIsScrollBarDrawXOutdated(SCROLL_LEFT)) {
+        scrollsDrawXAnimation(SCROLL_LEFT);
     }
-    else if (scrollsIsScrollBarDrawYOutdated(s_eScrollDrawTurn, s_eScrollBarDrawTurn)) {
-        scrollsDrawYAnimation(s_eScrollDrawTurn, s_eScrollBarDrawTurn);
+    else {
+        if (scrollsIsScrollBarDrawYOutdated(SCROLL_LEFT, SCROLL_BAR_TOP)) {
+            scrollsDrawYAnimation(SCROLL_LEFT, SCROLL_BAR_TOP);
+        }
+        if (scrollsIsScrollBarDrawYOutdated(SCROLL_LEFT, SCROLL_BAR_BOTTOM)) {
+            scrollsDrawYAnimation(SCROLL_LEFT, SCROLL_BAR_BOTTOM);
+        }
     }
+
+    if (scrollsIsScrollBarDrawXOutdated(SCROLL_RIGHT)) {
+        scrollsDrawXAnimation(SCROLL_RIGHT);
+    }
+    else {
+        if (scrollsIsScrollBarDrawYOutdated(SCROLL_RIGHT, SCROLL_BAR_TOP)) {
+            scrollsDrawYAnimation(SCROLL_RIGHT, SCROLL_BAR_TOP);
+        }
+        if (scrollsIsScrollBarDrawYOutdated(SCROLL_RIGHT, SCROLL_BAR_BOTTOM)) {
+            scrollsDrawYAnimation(SCROLL_RIGHT, SCROLL_BAR_BOTTOM);
+        }
+    }
+}
+
+void scrollsDrawContentBaground(tScrollType eScrollType) {
+    blitRect(
+        g_ppScrollsContentBitMap[eScrollType],
+        0,
+        0,
+        s_pScrollsData[eScrollType].uwContentWidth,
+        SCROLL_EDGE_HEIGHT,
+        SCROLL_CONTENT_COLOR_INDEX
+    );
 }
 
 void scrollsProcessDrawOrder(void) {
@@ -341,7 +373,19 @@ UBYTE scrollsRequestState(tScrollType eScrollType, tScrollState eScrollState) {
 
     // Lets process animation closer to target
     {
+        s_eScrollBarDrawTurn = SCROLL_LEFT;
+        s_eScrollBarDrawTurn = SCROLL_BAR_TOP;
         scrollsAnimatePos();
+        s_eScrollBarDrawTurn = SCROLL_BAR_BOTTOM;
+        scrollsAnimatePos();
+
+        s_eScrollBarDrawTurn = SCROLL_RIGHT;
+        s_eScrollBarDrawTurn = SCROLL_BAR_TOP;
+        scrollsAnimatePos();
+        s_eScrollBarDrawTurn = SCROLL_BAR_BOTTOM;
+        scrollsAnimatePos();
+
+
         scrollsDraw();
         scrollsProcessDrawOrder();
     }

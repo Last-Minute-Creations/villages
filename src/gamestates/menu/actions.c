@@ -36,34 +36,66 @@ static tUwCoordYX s_sSplashPromptPos = {
 
 /* Functions */
 
-tActionState actionExitGame(void) {
-	logWrite("actionExitGame");
+tActionState actionSplashStart(void) {
+	logWrite("actionSplashStart");
 
-	if (!fadeRequestState(FADE_STATE_OUT)) {
-		return ACTION_STATE_KEEP_RUNNING;
-	}
-
-	statePopAll(g_pStateManager);
-
-	return ACTION_STATE_ADVANCE;
-}
-
-tActionState actionHideRightScroll(void) {
-	logWrite("actionHideRightScroll");
-
-	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_HIDDEN)) {
-		return ACTION_STATE_KEEP_RUNNING;
-	}
+	blitCopyAligned(
+		g_pSplashBitMap, 0, 0,
+		g_pMenuBuffer->pBack, 0, 0,
+		GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT
+	);
 
 	return ACTION_STATE_ADVANCE;
 }
 
-tActionState actionCloseRightScroll(void) {
-	logWrite("actionCloseRightScroll");
+tActionState actionSplashPromtDraw(void) {
+	logWrite("actionSplashPromtDraw");
 
-	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_CLOSED)) {
+	if (!fadeRequestState(FADE_STATE_IN)) {
 		return ACTION_STATE_KEEP_RUNNING;
 	}
+
+	fontDrawStr(
+		g_pFont,
+		g_pMenuBuffer->pBack,
+		s_sSplashPromptPos.uwX,
+		s_sSplashPromptPos.uwY,
+		s_szSplashPrompt,
+		30,
+		FONT_HCENTER | FONT_COOKIE | FONT_SHADOW,
+		g_pTextBitMap
+	);
+
+	return ACTION_STATE_ADVANCE;
+}
+
+tActionState actionSplashCheckForNewActions(void) {
+	if (keyUse(KEY_ESCAPE)) {
+		actionsQueue(actionExitGame);
+		return ACTION_STATE_ADVANCE;
+	}
+
+	if (mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
+		actionsQueue(actionSplashStop);
+		actionsQueue(actionMainMenuStart);
+		actionsQueue(actionMainMenuCheckForNewActions);
+		return ACTION_STATE_ADVANCE;
+	}
+
+	return ACTION_STATE_KEEP_RUNNING;
+}
+
+tActionState actionSplashStop(void) {
+	logWrite("actionSplashStop");
+
+	tUwCoordYX sTextSize = fontMeasureText(g_pFont, s_szSplashPrompt);
+	sTextSize.uwX = ceilToFactor(sTextSize.uwX, 16);
+
+	blitCopyAligned(
+		g_pSplashBitMap, s_sSplashPromptPos.uwX - (sTextSize.uwX >> 1), s_sSplashPromptPos.uwY,
+		g_pMenuBuffer->pBack, s_sSplashPromptPos.uwX - (sTextSize.uwX >> 1), s_sSplashPromptPos.uwY,
+		sTextSize.uwX, sTextSize.uwY
+	);
 
 	return ACTION_STATE_ADVANCE;
 }
@@ -88,92 +120,203 @@ tActionState actionMainMenuCheckForNewActions(void) {
 	if (keyUse(KEY_ESCAPE)) {
 		actionsQueue(actionHideRightScroll);
 		actionsQueue(actionSplashPromtDraw);
+		actionsQueue(actionSplashCheckForNewActions);
 
 		return ACTION_STATE_ADVANCE;
 	}
 
 	switch (menuItemMainMenuProcess()) {
-		case 0: // New game
+		case MENU_MAIN_ITEM_NEW_GAME:
 			actionsQueue(actionMainMenuStart);
 			actionsQueue(actionMainMenuCheckForNewActions);
 			return ACTION_STATE_ADVANCE;
-		case 1: // How to play?
-			actionsQueue(actionMainMenuStart);
-			actionsQueue(actionMainMenuCheckForNewActions);
+		case MENU_MAIN_ITEM_HOW_TO_PLAY:
+			actionsQueue(actionHowToPlayMenuStart);
+			actionsQueue(actionHowToPlayMenuCheckForNewActions);
 			return ACTION_STATE_ADVANCE;
-		case 2: // Credits
-			actionsQueue(actionMainMenuStart);
-			actionsQueue(actionMainMenuCheckForNewActions);
+		case MENU_MAIN_ITEM_CREDITS:
+			actionsQueue(actionCreditsMenuStart);
+			actionsQueue(actionCreditsMenuCheckForNewActions);
 			return ACTION_STATE_ADVANCE;
-		case 3: // Quit
+		case MENU_MAIN_ITEM_QUIT:
 			actionsQueue(actionHideRightScroll);
 			actionsQueue(actionExitGame);
 			return ACTION_STATE_ADVANCE;
+		default:
+			break;
 	}
 
 	return ACTION_STATE_KEEP_RUNNING;
 }
 
-tActionState actionSplashPromtUndraw(void) {
-	logWrite("actionSplashPromtUndraw");
+tActionState actionCreditsMenuStart(void) {
+	logWrite("actionCreditsMenuStart");
 
-	tUwCoordYX sTextSize = fontMeasureText(g_pFont, s_szSplashPrompt);
-	sTextSize.uwX = ceilToFactor(sTextSize.uwX, 16);
-
-	blitCopyAligned(
-		g_pSplashBitMap, s_sSplashPromptPos.uwX - (sTextSize.uwX >> 1), s_sSplashPromptPos.uwY,
-		g_pMenuBuffer->pBack, s_sSplashPromptPos.uwX - (sTextSize.uwX >> 1), s_sSplashPromptPos.uwY,
-		sTextSize.uwX, sTextSize.uwY
-	);
-
-	return ACTION_STATE_ADVANCE;
-}
-
-tActionState actionSplashCheckForNewActions(void) {
-	if (keyUse(KEY_ESCAPE)) {
-		actionsQueue(actionExitGame);
-		return ACTION_STATE_ADVANCE;
-	}
-
-	if (mouseUse(MOUSE_PORT_1, MOUSE_LMB)) {
-		actionsQueue(actionSplashPromtUndraw);
-		actionsQueue(actionMainMenuStart);
-		actionsQueue(actionMainMenuCheckForNewActions);
-		return ACTION_STATE_ADVANCE;
-	}
-
-	return ACTION_STATE_KEEP_RUNNING;
-}
-
-tActionState actionSplashPromtDraw(void) {
-	logWrite("actionSplashPromtDraw");
-
-	if (!fadeRequestState(FADE_STATE_IN)) {
+	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_HIDDEN)) {
 		return ACTION_STATE_KEEP_RUNNING;
 	}
 
-	fontDrawStr(
-		g_pFont,
-		g_pMenuBuffer->pBack,
-		s_sSplashPromptPos.uwX,
-		s_sSplashPromptPos.uwY,
-		s_szSplashPrompt,
-		30,
-		FONT_HCENTER | FONT_COOKIE | FONT_SHADOW,
-		g_pTextBitMap
-	);
+	if (!scrollsRequestState(SCROLL_LEFT, SCROLL_STATE_CLOSED)) {
+		return ACTION_STATE_KEEP_RUNNING;
+	}
+
+	// Handle right scroll
+	{
+		menuItemBackMenuDraw();
+	}
+
+	// Handle left scroll
+	{
+		UBYTE ubMenuItemsCount = 5;
+		UWORD uwScrollContentHeight = ((g_pFont->uwHeight + MENU_ITEMS_SPACING) * ubMenuItemsCount) + MENU_ITEMS_SPACING;
+		scrollsSetContentHeight(SCROLL_LEFT, uwScrollContentHeight);
+		scrollsDrawContentBaground(SCROLL_LEFT);
+
+		fontDrawStr(
+			g_pFont, g_ppScrollsContentBitMap[SCROLL_LEFT],
+			scrollsGetContentWidth(SCROLL_LEFT) / 2,
+			MENU_ITEMS_SPACING + (SCROLL_EDGE_HEIGHT / 2) - (uwScrollContentHeight / 2) + ((g_pFont->uwHeight + MENU_ITEMS_SPACING) * 0),
+			"Code: Proxy",
+			MENU_ITEMS_TEXT_COLOR_INDEX,
+			FONT_HCENTER | FONT_COOKIE,
+			g_pTextBitMap
+		);
+		fontDrawStr(
+			g_pFont, g_ppScrollsContentBitMap[SCROLL_LEFT],
+			scrollsGetContentWidth(SCROLL_LEFT) / 2,
+			MENU_ITEMS_SPACING + (SCROLL_EDGE_HEIGHT / 2) - (uwScrollContentHeight / 2) + ((g_pFont->uwHeight + MENU_ITEMS_SPACING) * 1),
+			"GFX: Softiron",
+			MENU_ITEMS_TEXT_COLOR_INDEX,
+			FONT_HCENTER | FONT_COOKIE,
+			g_pTextBitMap
+		);
+		fontDrawStr(
+			g_pFont, g_ppScrollsContentBitMap[SCROLL_LEFT],
+			scrollsGetContentWidth(SCROLL_LEFT) / 2,
+			MENU_ITEMS_SPACING + (SCROLL_EDGE_HEIGHT / 2) - (uwScrollContentHeight / 2) + ((g_pFont->uwHeight + MENU_ITEMS_SPACING) * 2),
+			"SFX: Luc3k",
+			MENU_ITEMS_TEXT_COLOR_INDEX,
+			FONT_HCENTER | FONT_COOKIE,
+			g_pTextBitMap
+		);
+		fontDrawStr(
+			g_pFont, g_ppScrollsContentBitMap[SCROLL_LEFT],
+			scrollsGetContentWidth(SCROLL_LEFT) / 2,
+			MENU_ITEMS_SPACING + (SCROLL_EDGE_HEIGHT / 2) - (uwScrollContentHeight / 2) + ((g_pFont->uwHeight + MENU_ITEMS_SPACING) * 4),
+			"THX: KaiN",
+			MENU_ITEMS_TEXT_COLOR_INDEX,
+			FONT_HCENTER | FONT_COOKIE,
+			g_pTextBitMap
+		);
+	}
 
 	return ACTION_STATE_ADVANCE;
 }
 
-tActionState actionSplashStart(void) {
-	logWrite("actionSplashStart");
+tActionState actionCreditsMenuCheckForNewActions(void) {
+	UBYTE ubLeftScrollState = scrollsRequestState(SCROLL_LEFT, SCROLL_STATE_OPEN);
+	UBYTE ubRightScrollState = scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_OPEN);
+	if (!ubLeftScrollState || !ubRightScrollState) {
+		return ACTION_STATE_KEEP_RUNNING;
+	}
 
-	blitCopyAligned(
-		g_pSplashBitMap, 0, 0,
-		g_pMenuBuffer->pBack, 0, 0,
-		GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT
-	);
+	if (keyUse(KEY_ESCAPE)) {
+		actionsQueue(actionCreditsMenuStop);
+		actionsQueue(actionMainMenuStart);
+		actionsQueue(actionMainMenuCheckForNewActions);
+
+		return ACTION_STATE_ADVANCE;
+	}
+
+	switch (menuItemBackMenuProcess()) {
+		case MENU_BACK_ITEM_BACK:
+			actionsQueue(actionCreditsMenuStop);
+			actionsQueue(actionMainMenuStart);
+			actionsQueue(actionMainMenuCheckForNewActions);
+			return ACTION_STATE_ADVANCE;
+		default:
+			break;
+	}
+
+	return ACTION_STATE_KEEP_RUNNING;
+}
+
+tActionState actionCreditsMenuStop(void) {
+	logWrite("actionCreditsMenuStop");
+
+	UBYTE ubLeftScrollState = scrollsRequestState(SCROLL_LEFT, SCROLL_STATE_HIDDEN);
+	UBYTE ubRightScrollState = scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_HIDDEN);
+	if (!ubLeftScrollState || !ubRightScrollState) {
+		return ACTION_STATE_KEEP_RUNNING;
+	}
+
+	return ACTION_STATE_ADVANCE;
+}
+
+tActionState actionHowToPlayMenuStart(void) {
+	logWrite("actionHowToPlayMenuStart");
+
+	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_CLOSED)) {
+		return ACTION_STATE_KEEP_RUNNING;
+	}
+
+	menuItemBackMenuDraw();
+
+	return ACTION_STATE_ADVANCE;
+}
+
+tActionState actionHowToPlayMenuCheckForNewActions(void) {
+	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_OPEN)) {
+		return ACTION_STATE_KEEP_RUNNING;
+	}
+
+	if (keyUse(KEY_ESCAPE)) {
+		actionsQueue(actionMainMenuStart);
+		actionsQueue(actionMainMenuCheckForNewActions);
+
+		return ACTION_STATE_ADVANCE;
+	}
+
+	switch (menuItemBackMenuProcess()) {
+		case MENU_BACK_ITEM_BACK:
+			actionsQueue(actionMainMenuStart);
+			actionsQueue(actionMainMenuCheckForNewActions);
+			return ACTION_STATE_ADVANCE;
+		default:
+			break;
+	}
+
+	return ACTION_STATE_KEEP_RUNNING;
+}
+
+tActionState actionHideRightScroll(void) {
+	logWrite("actionHideRightScroll");
+
+	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_HIDDEN)) {
+		return ACTION_STATE_KEEP_RUNNING;
+	}
+
+	return ACTION_STATE_ADVANCE;
+}
+
+tActionState actionCloseRightScroll(void) {
+	logWrite("actionCloseRightScroll");
+
+	if (!scrollsRequestState(SCROLL_RIGHT, SCROLL_STATE_CLOSED)) {
+		return ACTION_STATE_KEEP_RUNNING;
+	}
+
+	return ACTION_STATE_ADVANCE;
+}
+
+tActionState actionExitGame(void) {
+	logWrite("actionExitGame");
+
+	if (!fadeRequestState(FADE_STATE_OUT)) {
+		return ACTION_STATE_KEEP_RUNNING;
+	}
+
+	statePopAll(g_pStateManager);
 
 	return ACTION_STATE_ADVANCE;
 }

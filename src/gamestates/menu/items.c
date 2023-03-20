@@ -10,10 +10,6 @@
 
 /* Types */
 
-#define MENU_ITEMS_SPACING 8
-#define MENU_ITEMS_TEXT_COLOR_INDEX 8
-#define MENU_ITEMS_TEXT_HOVERED_COLOR_INDEX 22
-
 typedef struct _tMenuItem {
 	char *szText;
 	tUwRect sButtonRect;
@@ -36,7 +32,7 @@ static tMenuItem s_pMainMenuItems[] = {
 		.ubIsHovered = 0,
 	},
 	{
-		.szText = "How To Play?",
+		.szText = "How To Play",
 		.sButtonRect = {
 			.uwX = 0,
 			.uwY = 0,
@@ -69,18 +65,34 @@ static tMenuItem s_pMainMenuItems[] = {
 
 static UBYTE s_ubMainMenuItemsCount = sizeof(s_pMainMenuItems) / sizeof(s_pMainMenuItems[0]);
 
+static tMenuItem s_pBackMenuItems[] = {
+	{
+		.szText = "Back",
+		.sButtonRect = {
+			.uwX = 0,
+			.uwY = 0,
+			.uwWidth = 0,
+			.uwHeight = 0,
+		},
+		.ubIsHovered = 0,
+	},
+};
+
+static UBYTE s_ubBackMenuItemsCount = sizeof(s_pBackMenuItems) / sizeof(s_pBackMenuItems[0]);
+
 /* Functions */
 
 UBYTE menuItemGetTextColor(UBYTE ubIsHovered) {
 	return ubIsHovered ? MENU_ITEMS_TEXT_HOVERED_COLOR_INDEX : MENU_ITEMS_TEXT_COLOR_INDEX;
 }
 
-void menuItemMainMenuDraw(void) {
-	UWORD uwScrollContentHeight = ((g_pFont->uwHeight + MENU_ITEMS_SPACING) * s_ubMainMenuItemsCount) + MENU_ITEMS_SPACING;
+void menuItemDrawMenu(tMenuItem *pMenuItems, UBYTE ubMenuItemsCount) {
+	UWORD uwScrollContentHeight = ((g_pFont->uwHeight + MENU_ITEMS_SPACING) * ubMenuItemsCount) + MENU_ITEMS_SPACING;
 	scrollsSetContentHeight(SCROLL_RIGHT, uwScrollContentHeight);
+	scrollsDrawContentBaground(SCROLL_RIGHT);
 
-	for (UBYTE ubItemIndex = 0; ubItemIndex < s_ubMainMenuItemsCount; ++ubItemIndex) {
-		tMenuItem *pMenuItem = &s_pMainMenuItems[ubItemIndex];
+	for (UBYTE ubItemIndex = 0; ubItemIndex < ubMenuItemsCount; ++ubItemIndex) {
+		tMenuItem *pMenuItem = &pMenuItems[ubItemIndex];
 
 		tUwCoordYX sTextDimensions = fontMeasureText(g_pFont, pMenuItem->szText);
 		tUwCoordYX sTextLocalCoords = {
@@ -89,6 +101,7 @@ void menuItemMainMenuDraw(void) {
 		};
 		tUwCoordYX sTextGlobalCoords = scrollsCoordsFromLocalToGlobal(SCROLL_RIGHT, sTextLocalCoords);
 
+		pMenuItem->ubIsHovered = FALSE;
 		pMenuItem->sButtonRect = (tUwRect) {
 			.uwX = sTextGlobalCoords.uwX,
 			.uwY = sTextGlobalCoords.uwY,
@@ -119,9 +132,9 @@ void menuItemMainMenuDraw(void) {
 	}
 }
 
-UBYTE menuItemMainMenuProcess(void) {
-	for (UBYTE ubItemIndex = 0; ubItemIndex < s_ubMainMenuItemsCount; ++ubItemIndex) {
-		tMenuItem *pMenuItem = &s_pMainMenuItems[ubItemIndex];
+BYTE menuItemProcessMenu(tMenuItem *pMenuItems, UBYTE ubMenuItemsCount) {
+	for (UBYTE ubItemIndex = 0; ubItemIndex < ubMenuItemsCount; ++ubItemIndex) {
+		tMenuItem *pMenuItem = &pMenuItems[ubItemIndex];
 
 		UBYTE ubIsHovered = mouseInRect(MOUSE_PORT_1, pMenuItem->sButtonRect);
 
@@ -149,5 +162,43 @@ UBYTE menuItemMainMenuProcess(void) {
 		}
 	}
 
-	return 4;
+	return -1;
+}
+
+void menuItemMainMenuDraw(void) {
+	menuItemDrawMenu(s_pMainMenuItems, s_ubMainMenuItemsCount);
+}
+
+tMainMenuItemType menuItemMainMenuProcess(void) {
+	BYTE bActivatedMenuItem = menuItemProcessMenu(s_pMainMenuItems, s_ubMainMenuItemsCount);
+
+	if (bActivatedMenuItem == -1) {
+		return MENU_MAIN_ITEM_COUNT;
+	}
+
+	if ((bActivatedMenuItem < MENU_MAIN_ITEM_NEW_GAME) || (MENU_MAIN_ITEM_COUNT < bActivatedMenuItem)) {
+		logWrite("ERR: Activated menu item outside of bounds: %d", bActivatedMenuItem);
+		return MENU_MAIN_ITEM_COUNT;
+	}
+
+	return (tMainMenuItemType) bActivatedMenuItem;
+}
+
+void menuItemBackMenuDraw(void) {
+	menuItemDrawMenu(s_pBackMenuItems, s_ubBackMenuItemsCount);
+}
+
+tBackMenuItemType menuItemBackMenuProcess(void) {
+	BYTE bActivatedMenuItem = menuItemProcessMenu(s_pBackMenuItems, s_ubBackMenuItemsCount);
+
+	if (bActivatedMenuItem == -1) {
+		return MENU_BACK_ITEM_COUNT;
+	}
+
+	if ((bActivatedMenuItem < MENU_BACK_ITEM_BACK) || (MENU_BACK_ITEM_COUNT < bActivatedMenuItem)) {
+		logWrite("ERR: Activated menu item outside of bounds: %d", bActivatedMenuItem);
+		return MENU_BACK_ITEM_COUNT;
+	}
+
+	return (tBackMenuItemType) bActivatedMenuItem;
 }

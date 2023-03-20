@@ -8,8 +8,8 @@
 /* Types */
 
 #define SCROLLS_MARGIN 16
-#define SCROLLS_X_SPEED 16
-#define SCROLLS_Y_SPEED 16
+#define SCROLLS_X_SPEED 4
+#define SCROLLS_Y_SPEED 4
 
 #define SCROLL_LEFT_WIDTH 144
 #define SCROLL_RIGHT_WIDTH 128
@@ -73,6 +73,8 @@ UWORD scrollsGetContentHeight(tScrollType eScrollType);
 void scrollsSetContentHeight(tScrollType eScrollType, UWORD uwContentHeight);
 
 UWORD scrollsGetContentWidth(tScrollType eScrollType);
+
+void scrollsDrawContentBaground(tScrollType eScrollType);
 
 tUwCoordYX scrollsCoordsFromLocalToGlobal(tScrollType eScrollType, tUwCoordYX sLocalCoords);
 

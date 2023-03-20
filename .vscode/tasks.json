@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "cmake debug all",
+            "label": "Set CMake to debug all",
             "type": "shell",
             "command": "cmake",
             "group": "build",
@@ -19,7 +19,7 @@
             "problemMatcher": [],
         },
         {
-            "label": "cmake debug game",
+            "label": "Set CMake to debug game only",
             "type": "shell",
             "command": "cmake",
             "group": "build",
@@ -34,7 +34,7 @@
             "problemMatcher": [],
         },
         {
-            "label": "cmake debug ace",
+            "label": "Set CMake to debug ace only",
             "type": "shell",
             "command": "cmake",
             "group": "build",
@@ -49,7 +49,7 @@
             "problemMatcher": [],
         },
         {
-            "label": "cmake release",
+            "label": "Set CMake to release",
             "type": "shell",
             "command": "cmake",
             "group": "build",

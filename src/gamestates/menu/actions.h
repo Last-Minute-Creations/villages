@@ -14,11 +14,20 @@ typedef tActionState (*tActionPtr)(void);
 
 /* Functions */
 
-tActionState actionExitGame(void);
-
-tActionState actionMainMenuClose(void);
-
+tActionState actionSplashStart(void);
 tActionState actionSplashPromtDraw(void);
+tActionState actionSplashCheckForNewActions(void);
+tActionState actionSplashStop(void);
+tActionState actionMainMenuStart(void);
+tActionState actionMainMenuCheckForNewActions(void);
+tActionState actionCreditsMenuStart(void);
+tActionState actionCreditsMenuCheckForNewActions(void);
+tActionState actionCreditsMenuStop(void);
+tActionState actionHowToPlayMenuStart(void);
+tActionState actionHowToPlayMenuCheckForNewActions(void);
+tActionState actionHideRightScroll(void);
+tActionState actionCloseRightScroll(void);
+tActionState actionExitGame(void);
 
 void actionsInit(void);
 
