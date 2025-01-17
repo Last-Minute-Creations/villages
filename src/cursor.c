@@ -13,9 +13,9 @@ static tBitMap *s_pCursorBitMap;
 static tSprite *s_pCursorSprite;
 
 void cursorCreate(tView *pView, char *szPath) {
-	s_pCursorBitMap = bitmapCreateFromFile(szPath, 0);
-	spriteManagerCreate(pView);
-	s_pCursorSprite = spriteAdd(CURSOR_SPRITE_INDEX, s_pCursorBitMap, 0);
+	s_pCursorBitMap = bitmapCreateFromPath(szPath, 0);
+	spriteManagerCreate(pView, 0);
+	s_pCursorSprite = spriteAdd(CURSOR_SPRITE_INDEX, s_pCursorBitMap);
 }
 
 void cursorDestroy(void) {
@@ -28,5 +28,5 @@ void cursorUpdate(void) {
 	s_pCursorSprite->wX = mouseGetX(MOUSE_PORT_1);
 	s_pCursorSprite->wY = mouseGetY(MOUSE_PORT_1);
 
-	spriteUpdate(s_pCursorSprite);
+	spriteProcess(s_pCursorSprite);
 }

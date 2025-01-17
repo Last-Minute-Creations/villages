@@ -3,6 +3,7 @@
 #include <ace/managers/rand.h>
 #include <ace/managers/key.h>
 #include <ace/managers/mouse.h>
+#include <ace/utils/sprite.h>
 
 #include <ace/utils/palette.h>
 
@@ -42,13 +43,13 @@ void genericCreate(void) {
 		TAG_DONE
 	);
 
-	copBlockDisableSprites(g_pView->pCopList, 0xFE);
+	spriteDisableInCopBlockMode(g_pView->pCopList, 0xFE);
 	systemSetDmaBit(DMAB_SPRITE, TRUE);
 
 	cursorCreate(g_pView, "data/cursors/hand.bm");
-	g_pFont = fontCreate("data/fonts/arpegius-15.fnt");
+	g_pFont = fontCreateFromPath("data/fonts/arpegius-15.fnt");
 	g_pTextBitMap = fontCreateTextBitMap(GAME_SCREEN_WIDTH, g_pFont->uwHeight);
-	paletteLoad("data/palettes/global.plt", g_pPalette, GAME_COLOR_COUNT);
+	paletteLoadFromPath("data/palettes/global.plt", g_pPalette, GAME_COLOR_COUNT);
 
 	g_pStateManager = stateManagerCreate();
 	statePush(g_pStateManager, g_pStates[GAME_STATE_MENU]);

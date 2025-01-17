@@ -96,8 +96,8 @@ static tScrollBarType s_eScrollBarDrawTurn = SCROLL_BAR_TOP;
 void scrollsCreate(void) {
     logBlockBegin("scrollsCreate()");
 
-    s_pScrollsBitMap = bitmapCreateFromFile("data/bitmaps/scrolls.bm", FALSE);
-    s_pScrollsMaskBitMap = bitmapCreateFromFile("data/bitmaps/scrolls_mask.bm", FALSE);
+    s_pScrollsBitMap = bitmapCreateFromPath("data/bitmaps/scrolls.bm", FALSE);
+    s_pScrollsMaskBitMap = bitmapCreateFromPath("data/bitmaps/scrolls_mask.bm", FALSE);
 
     for (tScrollType eScrollType = SCROLL_LEFT; eScrollType < SCROLL_COUNT; ++eScrollType) {
         g_ppScrollsContentBitMap[eScrollType] = bitmapCreate(s_pScrollsData[eScrollType].uwContentWidth, SCROLL_EDGE_HEIGHT, GAME_BPP, 0);
@@ -228,7 +228,7 @@ void scrollsDrawXAnimation(tScrollType eScrollType) {
                 s_pScrollsBitMap, wLeftOffscreenSize, SCROLL_BAR_HEIGHT * eScrollType * 2,
                 g_pMenuBuffer->pBack, pXPos->wCurrent + wLeftOffscreenSize, SCROLL_BAR_TOP_CLOSED_Y_POS,
                 uwActualWidth, SCROLL_BAR_HEIGHT * 2,
-                (const UWORD *) s_pScrollsMaskBitMap->Planes[0]
+                s_pScrollsMaskBitMap->Planes[0]
             );
         }
     }
@@ -284,7 +284,7 @@ void scrollsDrawYAnimation(tScrollType eScrollType, tScrollBarType eScrollBarTyp
             s_pScrollsBitMap, (SCROLL_EDGE_WIDTH * eScrollType * 2), uwReDrawYPos - SCROLL_CONTENT_TO_SCREEN_Y_OFFSET + uwScrollEdgeBitMapOffset,
             g_pMenuBuffer->pBack, pXPos->wLast, uwReDrawYPos,
             SCROLL_EDGE_WIDTH, uwYPosDiff,
-            (const UWORD *) s_pScrollsMaskBitMap->Planes[0]
+            s_pScrollsMaskBitMap->Planes[0]
         );
 
         // Draw right scroll edge
@@ -292,7 +292,7 @@ void scrollsDrawYAnimation(tScrollType eScrollType, tScrollBarType eScrollBarTyp
             s_pScrollsBitMap, (SCROLL_EDGE_WIDTH * eScrollType * 2) + SCROLL_EDGE_WIDTH, uwReDrawYPos - SCROLL_CONTENT_TO_SCREEN_Y_OFFSET + uwScrollEdgeBitMapOffset,
             g_pMenuBuffer->pBack, pXPos->wLast + pScroll->uwContentWidth + SCROLL_EDGE_WIDTH, uwReDrawYPos,
             SCROLL_EDGE_WIDTH, uwYPosDiff,
-            (const UWORD *) s_pScrollsMaskBitMap->Planes[0]
+            s_pScrollsMaskBitMap->Planes[0]
         );
     }
 
@@ -302,7 +302,7 @@ void scrollsDrawYAnimation(tScrollType eScrollType, tScrollBarType eScrollBarTyp
             s_pScrollsBitMap, 0, (SCROLL_BAR_HEIGHT * eScrollType * 2) + (SCROLL_BAR_HEIGHT * eScrollBarType),
             g_pMenuBuffer->pBack, pXPos->wCurrent, pYPos->wCurrent,
             pScroll->uwWidth, SCROLL_BAR_HEIGHT,
-            (const UWORD *) s_pScrollsMaskBitMap->Planes[0]
+            s_pScrollsMaskBitMap->Planes[0]
         );
     }
 
